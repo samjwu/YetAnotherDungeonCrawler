@@ -32,6 +32,7 @@ display_surface.blit(player, (player_position[0], player_position[1]))
 # pygame.draw.rect(display_surface, (100,0,0), (0,0,100,50))
 
 while True:
+    # pygame.event.wait()
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -39,6 +40,13 @@ while True:
         elif event.type == KEYDOWN:
             if (event.key == K_RIGHT) and player_position[0] < map_width - 1:
                 player_position[0] += 1
-
+            elif (event.key == K_LEFT) and player_position[0] > 0:
+                player_position[0] -= 1
+            elif (event.key == K_UP) and player_position[1] < map_height - 1:
+                player_position[1] += 1
+            elif (event.key == K_DOWN) and player_position[1] > 0:
+                player_position[1] -= 1
+        else:
+            None
 
     pygame.display.update()
