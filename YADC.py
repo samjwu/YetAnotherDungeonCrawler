@@ -13,7 +13,7 @@ dgray = (80,80,80)
 black = (0,0,0)
 
 #textures
-floor = pygame.image.load("floor.jpg")
+floor = pygame.image.load("assets/images/floor.jpg")
 
 #init
 pygame.init()
@@ -21,7 +21,7 @@ display_surface = pygame.display.set_mode((map_width*tile_size,map_height*tile_s
 pygame.display.set_caption("YetAnotherDungeonCrawler (YADC)")
 
 #sprites
-player = pygame.image.load("calvin.png").convert_alpha()
+player = pygame.image.load("assets/images/calvin.png").convert_alpha()
 player_position = [0,0]
 
 #display
@@ -42,11 +42,12 @@ while True:
                 player_position[0] += 1
             elif (event.key == K_LEFT) and player_position[0] > 0:
                 player_position[0] -= 1
-            elif (event.key == K_UP) and player_position[1] < map_height - 1:
-                player_position[1] += 1
-            elif (event.key == K_DOWN) and player_position[1] > 0:
+            elif (event.key == K_UP) and player_position[1] > 0:
                 player_position[1] -= 1
+            elif (event.key == K_DOWN) and player_position[1] < map_height - 1:
+                player_position[1] += 1
         else:
             None
+        print(player_position)
 
     pygame.display.update()
