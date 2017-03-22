@@ -3,8 +3,8 @@ from pygame.locals import *
 
 # game dungeon dimensions
 tile_size = 30
-map_width = 40
-map_height = 40
+map_width = 30
+map_height = 30
 
 # initialize game surface
 pygame.init()
