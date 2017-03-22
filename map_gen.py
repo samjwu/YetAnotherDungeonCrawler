@@ -19,6 +19,6 @@ while True:
             pygame.quit()
             sys.exit()
 
-    dungeon.generate_room()
+    dungeon.create_rand_room()
     pygame.display.update()
     pygame.time.delay(1000)

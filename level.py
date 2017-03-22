@@ -4,12 +4,6 @@ import sys
 import random
 from level_constants import *
 
-MIN_ROOM_WIDTH = 3
-MAX_ROOM_WIDTH = 10
-
-MIN_ROOM_HEIGHT = 3
-MAX_ROOM_HEIGHT = 10
-
 def constrain(n, lower_limit, upper_limit):
     if n < lower_limit:
         return lower_limit
@@ -92,6 +86,48 @@ class Room(pygame.sprite.Group):
                 new_tile = Tile(FLOOR, col, row, tile_size=self.tile_size)
                 self.add(new_tile)
 
+    # Class variables and methods
+    MIN_ROOM_WIDTH = 3
+    MAX_ROOM_WIDTH = 10
+
+    MIN_ROOM_HEIGHT = 3
+    MAX_ROOM_HEIGHT = 10
+    @classmethod
+    def generate_room(cls, region_x, region_y, region_width, region_height,
+                        tile_size=tile_size):
+        """ Generate room enclosed within a specified region
+
+            Simply creates a room within a specified region. Does not check if
+            room collides with exisiting rooms.
+
+            Arguments:
+                region_x (int): x position of topleft corner of enclosing region
+                region_y (int): y position of topleft corner of enclosing region
+                region_width (int): width of enclosing region
+                region_height (int): height of enclosing region
+                tile_size (int): size of tiles
+
+            Returns:
+                room (Room()): an instance of the Room class
+        """
+        # Deals with case of area is smaller than min room dimensions
+        if region_width < cls.MIN_ROOM_WIDTH \
+            or region_height < cls.MIN_ROOM_HEIGHT:
+                return None
+
+        # Generate characteristics of room
+        room_width = random.randint(cls.MIN_ROOM_WIDTH, cls.MAX_ROOM_WIDTH)
+        room_height = random.randint(cls.MIN_ROOM_HEIGHT, cls.MAX_ROOM_HEIGHT)
+        room_x = random.randint(region_x,
+                                ((region_x + region_width) - 1) - room_width)
+        room_y = random.randint(region_y,
+                                ((region_y + region_height) - 1) - room_height)
+        # Call room constructor
+        room = cls(room_x, room_y, room_width, room_height, tile_size)
+        print("room: ( {}, {}, {}, {} )".format(room_x, room_y,
+                                                room_width, room_height))
+        return room
+
 
 class Dungeon(pygame.sprite.Sprite):
     """ Represents the dungeon """
@@ -129,18 +165,12 @@ class Dungeon(pygame.sprite.Sprite):
                 self.screen.blit(self.tile_map[row][col].get_img(),
                             (col*self.tile_size, row*self.tile_size))
 
-    def generate_room(self):
+    def create_rand_room(self):
         """ Generates random room on map """
         # Generate room
-        room_width = random.randint(MIN_ROOM_WIDTH, MAX_ROOM_WIDTH)
-        room_height = random.randint(MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT)
-        room_x = random.randint(0, (self.width - 1) - room_width)
-        room_y = random.randint(0, (self.height - 1) - room_height)
-        room = Room(room_x, room_y, room_width, room_height,
-                    tile_size=self.tile_size)
+        room = Room.generate_room(0, 0, self.width, self.height,
+                                    tile_size=self.tile_size)
         self.rooms.append(room)
-        print("room: ( {}, {}, {}, {} )".format(room_x, room_y,
-                                                room_width, room_height))
 
         # Replace old tiles in tile_map with room tiles
         for tile in room:
