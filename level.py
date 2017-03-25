@@ -3,6 +3,9 @@ from pygame.locals import *
 import sys
 import random
 from level_constants import *
+sys.setrecursionlimit(30000)
+
+VISUALIZE = True
 
 def constrain(n, lower_limit, upper_limit):
     if n < lower_limit:
@@ -13,8 +16,15 @@ def constrain(n, lower_limit, upper_limit):
         return n
 
 class Tile(pygame.sprite.Sprite):
-    """ A class used to represent a tile """
-    def __init__(self, tile_id, x, y, tile_size=tile_size):
+    """ A class used to represent a tile
+
+        A tile is defined as a square in space with position (x, y) consiting
+        of a tile id which denotes its type (ex. grass, floor). Each tile also
+        has an associated image (obtained from the tile id) and surface which it
+        is to be displayed upon.
+
+    """
+    def __init__(self, tile_id, x, y):
         """ Creates new tile object
 
             Arguments:
@@ -30,7 +40,6 @@ class Tile(pygame.sprite.Sprite):
         self.tile_id = tile_id
         self.x = x
         self.y = y
-        self.size = tile_size
         self.image = tile_images.get(self.tile_id)
         self.screen = pygame.display.get_surface()
 
@@ -44,8 +53,17 @@ class Tile(pygame.sprite.Sprite):
         return str(self.tile_id)
 
 class Room(pygame.sprite.Group):
-    """ Class used to represent a room """
-    def __init__(self, x, y, width, height, tile_size=tile_size):
+    """ Class used to represent a room
+
+        A room is defined as a collection of tiles consisting of an interior
+        with positive area surrounded by walls. Therefore, the minimum room
+        width and height is 3. This leads to an area of 9 with 1 tile for the
+        interior and 8 for the border.
+
+        A room is located in space based upon the (x, y) position of its
+        top-left tile.
+    """
+    def __init__(self, x, y, width, height):
         """ Creates new Room object
 
             Arguments:
@@ -54,7 +72,6 @@ class Room(pygame.sprite.Group):
                 center (tuple of int): x, y position of center of room
                 width (int): width of room in tilemap
                 height (int): height of room in tilemap
-                tile_size (int): size of tiles in tilemap
 
         """
         # Call baseclass constructor
@@ -66,35 +83,30 @@ class Room(pygame.sprite.Group):
         self.center = ( (x + (width - 1)) // 2 , (y + (height - 1)) // 2 )
         self.width = width
         self.height = height
-        self.tile_size = tile_size
 
         # Generate vertical borders
         for row in range(y, y + height):
             for col in (x, x + (width - 1)):
-                new_tile = Tile(WALL, col, row, tile_size=self.tile_size)
-                self.add(new_tile)
+                self.add(Tile(WALL, col, row))
 
         # Generate horizontal borders
         for row in (y, y + (height - 1)):
             for col in range(x, x + width):
-                new_tile = Tile(WALL, col, row, tile_size=self.tile_size)
-                self.add(new_tile)
+                self.add(Tile(WALL, col, row))
 
         # Generate interior of room
         for row in range(y + 1, (y + height) - 1):
             for col in range(x + 1, (x + width) - 1):
-                new_tile = Tile(FLOOR, col, row, tile_size=self.tile_size)
-                self.add(new_tile)
+                self.add(Tile(FLOOR, col, row))
 
     # Class variables and methods
-    MIN_ROOM_WIDTH = 3
-    MAX_ROOM_WIDTH = 10
+    MIN_WIDTH = 5
+    MAX_WIDTH = 8
 
-    MIN_ROOM_HEIGHT = 3
-    MAX_ROOM_HEIGHT = 10
+    MIN_HEIGHT = 5
+    MAX_HEIGHT = 8
     @classmethod
-    def generate_room(cls, region_x, region_y, region_width, region_height,
-                        tile_size=tile_size):
+    def generate_room(cls, region_x, region_y, region_width, region_height):
         """ Generate room enclosed within a specified region
 
             Simply creates a room within a specified region. Does not check if
@@ -105,33 +117,41 @@ class Room(pygame.sprite.Group):
                 region_y (int): y position of topleft corner of enclosing region
                 region_width (int): width of enclosing region
                 region_height (int): height of enclosing region
-                tile_size (int): size of tiles
 
             Returns:
                 room (Room()): an instance of the Room class
         """
-        # Deals with case of area is smaller than min room dimensions
-        if region_width < cls.MIN_ROOM_WIDTH \
-            or region_height < cls.MIN_ROOM_HEIGHT:
+        if region_width < cls.MIN_WIDTH or region_height < cls.MIN_HEIGHT:
                 return None
+        elif region_width == cls.MIN_WIDTH and region_height == cls.MIN_HEIGHT:
+            room = cls(region_x, region_y, region_width, region_height)
 
         # Generate characteristics of room
-        room_width = random.randint(cls.MIN_ROOM_WIDTH, cls.MAX_ROOM_WIDTH)
-        room_height = random.randint(cls.MIN_ROOM_HEIGHT, cls.MAX_ROOM_HEIGHT)
-        room_x = random.randint(region_x,
-                                ((region_x + region_width) - 1) - room_width)
-        room_y = random.randint(region_y,
-                                ((region_y + region_height) - 1) - room_height)
-        # Call room constructor
-        room = cls(room_x, room_y, room_width, room_height, tile_size)
+        room_width = random.randint(cls.MIN_WIDTH,
+                        min(cls.MAX_WIDTH, region_width))
+        room_height = random.randint(cls.MIN_HEIGHT,
+                        min(cls.MAX_HEIGHT, region_height))
+        room_x = region_x + random.randint(0, region_width - room_width)
+        room_y = region_y + random.randint(0, region_height - room_height)
+        room = cls(room_x, room_y, room_width, room_height)
         print("room: ( {}, {}, {}, {} )".format(room_x, room_y,
                                                 room_width, room_height))
         return room
 
-
 class Dungeon(pygame.sprite.Sprite):
-    """ Represents the dungeon """
-    def __init__(self, height=map_height, width=map_width, tile_size=tile_size):
+    """ Represents the dungeon
+
+        A dungeon is defined as a region in space consisting of a single room
+        surrounded by a void. Since the minimum room width and height is
+        defined to be 3, in order for a dungeon to be surrounded by void, the
+        minimum dungeon width and height must be 5. Rooms can only be placed
+        within the interior of the dungeon.
+
+        Each dungeon has an associated width, height, and surface to draw the
+        dungeon upon. In addition, the dungeon stores the tiles at every
+        position within a tilemap. Lastly, a list of rooms is also stored
+    """
+    def __init__(self, height=MAP_HEIGHT, width=MAP_WIDTH, tile_size=TILE_SIZE):
         """ Creates new dungeon object
 
             Arguments:
@@ -146,38 +166,120 @@ class Dungeon(pygame.sprite.Sprite):
         super(Dungeon, self).__init__()
 
         # Init
-        self.width = map_width
-        self.height = map_height
+        self.width = width
+        self.height = height
         self.screen = pygame.display.get_surface()
-        self.tile_size = tile_size
         self.rooms = []
 
         # Initialize tile map
         self.tile_map = [
-            [Tile(VOID, row, col, tile_size=self.tile_size) for col in \
+            [Tile(VOID, row, col) for col in \
                 range(self.width)] for row in range(self.height)
         ]
+        self.draw((self.width,), (self.height,))
+        self.generate_dungeon(0, 0, self.width, self.height)
 
-    def draw(self):
+    def draw(self, x_limits, y_limits):
         """ Displays map on screen """
-        for row in range(self.height):
-            for col in range(self.width):
+        for row in range(*y_limits):
+            for col in range(*x_limits):
                 self.screen.blit(self.tile_map[row][col].get_img(),
-                            (col*self.tile_size, row*self.tile_size))
+                            (col*TILE_SIZE, row*TILE_SIZE))
 
-    def create_rand_room(self):
-        """ Generates random room on map """
+    def add_rand_room(self, region_x, region_y, region_width, region_height):
+        """ Generates random room on map and adds to room list """
         # Generate room
-        room = Room.generate_room(0, 0, self.width, self.height,
-                                    tile_size=self.tile_size)
+        room = Room.generate_room(region_x, region_y,
+                                    region_width, region_height)
         self.rooms.append(room)
 
-        # Replace old tiles in tile_map with room tiles
+        # Update tilemap
         for tile in room:
             self.tile_map[tile.y][tile.x] = tile
 
-        # Update tile_map
-        for row in range(room.y, room.y + room.height):
-            for col in range(room.x, room.x + room.width):
-                self.screen.blit(self.tile_map[row][col].get_img(),
-                            (col*self.tile_size, row*self.tile_size))
+        # Draw changed tiles
+        self.draw((room.x, room.x + room.width), (room.y, room.y + room.height))
+
+        return room
+
+    MIN_WIDTH = Room.MIN_WIDTH + 2
+    MIN_HEIGHT = Room. MIN_HEIGHT + 2
+    MAX_WIDTH = Room.MAX_WIDTH + 2
+    MAX_HEIGHT = Room. MAX_HEIGHT + 2
+    @staticmethod
+    def validate_region(region_width, region_height):
+        """ Check the dimensions of a region """
+        if region_width < Dungeon.MIN_WIDTH \
+            or region_height < Dungeon.MIN_HEIGHT:
+            # Too small
+            return -1
+        elif region_width <= Dungeon.MAX_WIDTH \
+            and region_height <= Dungeon.MAX_HEIGHT:
+            # Just right
+            return 0
+        else:
+            # Too big
+            return 1
+
+    def generate_dungeon(self, region_x, region_y, region_width, region_height):
+        """ Creates dungeon using Binary Space Partitioning
+
+            Binary Space Partitioning as applied to game map generation will
+            recursively divide the dungeon along a random dimension (left,
+            right) each function call. Once the sub regions are of a desired
+            size, a room will be generated within the region. Note that the
+            regions are built in a top-down fashion. However, to connection
+            of the subregions must be done in a bottom-up fashion. Each sub
+            region in the dungeon must be connected to its sister. Once all the
+            regions have been connected, there is guaranteed to be a path from
+            every room to every other room and thus the dungeon is complete
+            (IS THIS TRUE????).
+
+        """
+        print("Generating")
+        print("region: ( {}, {}, {}, {} )".format(region_x, region_y,
+                                                region_width, region_height))
+        if Dungeon.validate_region(region_width, region_height) == 0:
+            self.add_rand_room(region_x, region_y,
+                                    region_width, region_height)
+            return
+
+        dung_split = random.choice(["horz", "vert"])
+        print(dung_split)
+        if dung_split == "horz":
+            if region_height - Dungeon.MIN_HEIGHT <= Dungeon.MIN_HEIGHT:
+                # Can't split region anymore
+                print("cant split horizontally")
+                self.add_rand_room(region_x, region_y,
+                                        region_width, region_height)
+                return
+
+            top_height = random.randint(Dungeon.MIN_HEIGHT,
+                                        region_height - Dungeon.MIN_HEIGHT)
+            top = (region_x, region_y, region_width, top_height)
+            bottom = (region_x, region_y + top_height - 1, region_width,
+                        region_height - top_height)
+            if VISUALIZE:
+                start = (bottom[0] * TILE_SIZE, bottom[1] * TILE_SIZE)
+                end = ((bottom[0] + region_width) * TILE_SIZE, start[1])
+                pygame.draw.line(self.screen, green, start, end, TILE_SIZE)
+            self.generate_dungeon(*top)
+            self.generate_dungeon(*bottom)
+        else:
+            if region_width - Dungeon.MIN_WIDTH <= Dungeon.MIN_WIDTH:
+                # Can't split region anymore
+                print("cant split vertically")
+                self.add_rand_room(region_x, region_y,
+                                        region_width, region_height)
+                return
+            left_width = random.randint(Dungeon.MIN_WIDTH,
+                                        region_width - Dungeon.MIN_WIDTH)
+            left = (region_x, region_y, left_width, region_height)
+            right = (region_x + left_width - 1, region_y,
+                        region_width - left_width, region_height)
+            if VISUALIZE:
+                start = (right[0] * TILE_SIZE, right[1] * TILE_SIZE)
+                end = (start[0], (right[1] + region_height) * TILE_SIZE)
+                pygame.draw.line(self.screen, green, start, end, TILE_SIZE)
+            self.generate_dungeon(*left)
+            self.generate_dungeon(*right)
