@@ -4,16 +4,16 @@ from pygame.locals import *
 import level
 from level_constants import *
 
+# initialize dungeon
+dungeon = level.Dungeon()
+print("done")
+# Print to screen
 while True:
-    # initialize dungeon
-    dungeon = level.Dungeon()
-    # Print to screen
-    dungeon.display()
-    # dungeon.print_to_teminal()
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
 
+    # dungeon.add_rand_room(0, 0, dungeon.width, dungeon.height)
     pygame.display.update()
-    pygame.time.delay(1000)
+    # pygame.time.delay(1000)

@@ -2,14 +2,14 @@ import pygame
 from pygame.locals import *
 
 # game dungeon dimensions
-tile_size = 30
-map_width = 40
-map_height = 40
+TILE_SIZE = 30
+MAP_WIDTH = 30
+MAP_HEIGHT = 30
 
 # initialize game surface
 pygame.init()
-display_surface = \
-    pygame.display.set_mode((map_width*tile_size,map_height*tile_size))
+DISPLAY_SURFACE = \
+    pygame.display.set_mode((MAP_WIDTH*TILE_SIZE,MAP_HEIGHT*TILE_SIZE))
 pygame.display.set_caption("YetAnotherDungeonCrawler (YADC)")
 
 # color constants
