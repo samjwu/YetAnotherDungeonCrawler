@@ -59,7 +59,7 @@ class Player():
         #     if dy < 0:
         #         self.rect.bottom = enemy.rect.top
 
-        # for tile in gameplay.dungeon:
+        # for tile in dungeon:
         #     if self.rect.colliderect(tile.rect):
         #         if dx > 0:
         #             self.rect.right = tile.rect.left
