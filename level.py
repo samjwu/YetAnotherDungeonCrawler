@@ -41,6 +41,7 @@ class Tile(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.image = tile_images.get(self.tile_id)
+        self.rect = (x, y, 30, 30) #for collisions
         self.screen = pygame.display.get_surface()
 
     def get_id(self):
