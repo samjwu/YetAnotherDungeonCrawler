@@ -9,7 +9,8 @@ import gameplay_constants
 pygame.init()
 
 dungeon = level.Dungeon()
-enemy = gameplay_constants.Enemy(300, 300, gameplay_constants.enemy1_sprite, 1  )
+player = gameplay_constants.Player(0, 0, gameplay_constants.player_sprite, 5)
+enemy = gameplay_constants.Enemy(300, 300, gameplay_constants.enemy1_sprite, 1)
 
 while True:
     dungeon.draw()
@@ -25,13 +26,17 @@ while True:
 
     keys_pressed = pygame.key.get_pressed()
     if keys_pressed[K_LEFT]:
-        gameplay_constants.player_x -= 5
+        # gameplay_constants.player_x -= 5
+        player.move(-1,0)
     if keys_pressed[K_RIGHT]:
-        gameplay_constants.player_x += 5
+        # gameplay_constants.player_x += 5
+        player.move(1,0)
     if keys_pressed[K_UP]:
-        gameplay_constants.player_y -= 5
+        # gameplay_constants.player_y -= 5
+        player.move(0,1)
     if keys_pressed[K_DOWN]:
-        gameplay_constants.player_y += 5
+        # gameplay_constants.player_y += 5
+        player.move(0,-1)
 
     pygame.display.update()
     gameplay_constants.fpsClock.tick(gameplay_constants.FPS)

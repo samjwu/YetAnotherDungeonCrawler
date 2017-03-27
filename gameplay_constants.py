@@ -3,6 +3,9 @@ import pygame
 from pygame.locals import *
 import math
 
+import level
+import level_constants
+
 #set framerate
 FPS=30
 fpsClock=pygame.time.Clock()
@@ -19,17 +22,58 @@ enemy1_sprite = pygame.image.load("assets/images/pikachu.png").convert_alpha()
 # enemy1_speed = 1
 
 
-class Enemy():
-    '''Enemy class'''
+class Player():
+    '''Player class'''
+
     def __init__(self, x, y, sprite, speed):
-        """
+        '''
+        Create a player object
+        Arguments:
+            x (int): horizontal position of player
+            y (int): vertical position of player
+            sprite (image): picture used for player
+            speed (int): how fast player should move
+        '''
+        self.rect = pygame.Rect(0, 0, 30,30) #todo
+        self.x = x
+        self.y = y
+        self.sprite = sprite
+        self.speed = speed
+
+    def move(self, dx, dy):
+        '''
+        Move player based on keyboard input
+        Arguments:
+            dx (int): how far to move horiziontally
+            dy (int): how far to move vertically
+        '''
+        self.x += dx * self.speed
+        self.y += dy * self.speed
+
+        for tile in level.dungeon:
+            if self.rect.colliderect(tile.rect):
+                if dx > 0:
+                    self.rect.right = tile.rect.left
+                if dx < 0:
+                    self.rect.left = tile.rect.right
+                if dy > 0:
+                    self.rect.top = tile.rect.bottom
+                if dy < 0:
+                    self.rect.bottom = tile.rect.top
+
+
+class Enemy():
+    '''Class for enemy objects'''
+
+    def __init__(self, x, y, sprite, speed):
+        '''
         Create an enemy object
         Arguments:
-            x (int): horiziontal position of enemy
+            x (int): horizontal position of enemy
             y (int): vertical position of enemy
             sprite (image): picture used for enemy
             speed (int): how fast enemy should move
-        """
+        '''
         self.x = x
         self.y = y
         self.sprite = sprite
@@ -39,18 +83,17 @@ class Enemy():
         '''
         Generate an enemy
         Arguments:
-            x (int): horiziontal position of enemy
+            x (int): horizontal position of enemy
             y (int): vertical position of enemy
             sprite (image): picture used for enemy
             speed (int): how fast enemy should move
         '''
 
-
     def chase_player(self, player_x, player_y):
         '''
         Method for enemy to chase player
         Arguments:
-            player_x (int): horiziontal position of player
+            player_x (int): horizontal position of player
             player_y (int): vertical position of player
         '''
         dist_x = self.x - player_x
