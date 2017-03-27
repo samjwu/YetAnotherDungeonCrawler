@@ -3,25 +3,26 @@ import pygame, sys, time
 from pygame.locals import *
 
 import level
-import level_constants
+# import level_constants
+from level_constants import *
 import gameplay_constants
 
 pygame.init()
 
 dungeon = level.Dungeon()
-dungeon.create_rand_room()
-room = level.Room(0, 0, 5, 5)
-for row in range(room.y, room.y + room.height):
-    for col in range(room.x, room.x + room.width):
-        dungeon.screen.blit(dungeon.tile_map[row][col].get_img(),
-                    (col*dungeon.tile_size, row*dungeon.tile_size))
+# dungeon.create_rand_room()
+# room = level.Room(0, 0, 5, 5)
+# for row in range(room.y, room.y + room.height):
+#     for col in range(room.x, room.x + room.width):
+#         dungeon.screen.blit(dungeon.tile_map[row][col].get_img(),
+#                     (col*dungeon.TILE_SIZE, row*dungeon.TILE_SIZE))
 player = gameplay_constants.Player(0, 0, gameplay_constants.player_sprite, 5)
 enemy = gameplay_constants.Enemy(300, 300, gameplay_constants.enemy1_sprite, 1)
 
 while True:
-    dungeon.draw()
-    level.display_surface.blit(gameplay_constants.player_sprite, (player.x, player.y))
-    level.display_surface.blit(gameplay_constants.enemy1_sprite, (enemy.x, enemy.y))
+    dungeon.draw((dungeon.width,), (dungeon.height,))
+    level.DISPLAY_SURFACE.blit(gameplay_constants.player_sprite, (player.x, player.y))
+    level.DISPLAY_SURFACE.blit(gameplay_constants.enemy1_sprite, (enemy.x, enemy.y))
 
     for event in pygame.event.get():
         if event.type == QUIT:
