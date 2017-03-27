@@ -6,19 +6,14 @@ from level_constants import *
 
 # initialize dungeon
 dungeon = level.Dungeon()
+print("done")
 # Print to screen
-dungeon.draw()
 while True:
-    # # initialize dungeon
-    # dungeon = level.Dungeon()
-    # # Print to screen
-    # dungeon.draw()
-    # dungeon.print_to_teminal()
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
 
-    dungeon.create_rand_room()
+    # dungeon.add_rand_room(0, 0, dungeon.width, dungeon.height)
     pygame.display.update()
-    pygame.time.delay(1000)
+    # pygame.time.delay(1000)
