@@ -46,11 +46,15 @@ class Tile(pygame.sprite.Sprite):
     def get_id(self):
         return self.tile_id
 
-    def get_img(self):
+    def get_image(self):
         return self.image
 
     def __str__(self):
         return str(self.tile_id)
+
+    def draw(self):
+        self.screen.blit(self.image, (self.x*TILE_SIZE, self.y*TILE_SIZE))
+
 
 class Room(pygame.sprite.Group):
     """ Class used to represent a room
@@ -101,6 +105,10 @@ class Room(pygame.sprite.Group):
         for row in range(y + 1, (y + height) - 1):
             for col in range(x + 1, (x + width) - 1):
                 self.add(Tile(FLOOR, col, row))
+
+    def draw(self):
+        for tile in self.sprites():
+            tile.draw()
 
     # Class variables and methods
     MIN_WIDTH = 4
@@ -153,6 +161,79 @@ class Room(pygame.sprite.Group):
                                                 room_width, room_height))
         return room
 
+class Hallway(pygame.sprite.Sprite):
+    """ Class used to create and interact with a hallway
+
+        A hallway is defined to be a path of tiles within a region of
+        previously void space such that every tile in the path is connected
+        either horizontally or vertically to it's neighbours.
+
+        Every hallway tile must be surrounded by a border if it does not
+        intersect with another hallway
+    """
+    def __init__(self, start, end, path=None):
+        """ Creates hallway object
+
+            Arguments:
+                start (tuple: int): start position of hallway (adjacent to a
+                                    door)
+                end (tuple: int): end position of hallway (adjacent to a door)
+                width (int): width of hallway
+                height (int): height of hallway
+                path (list: Tile()): list of tiles corresponding to the path of
+                                    the hallway
+        """
+        if path is None:
+            path = []
+        self.start = start
+        self.end = end
+        # self.width = width
+        # self.height = height
+        self.path = []
+        self.border = []
+
+    def get_path(self):
+        return self.path
+
+    def get_border(self):
+        return self.border
+
+    def create_horz_path(self, start, end):
+        # Assume path to right first
+        limits = range(start[0], end[0] + 1)
+        if end[0] < start[0]:
+            # Path is actually to left
+            limits = range(end[0], start[0] + 1)
+
+        for x in limits:
+            self.path.append(Tile(FLOOR, x, start[1]))
+            for y in (start[1] - 1, start[1] + 1):
+                self.border.append(Tile(WALL, x, y))
+
+    def create_vert_path(self, start, end):
+        # Assume path is up
+        limits = range(start[1], end[1] + 1)
+        if end[1] < start[1]:
+            # Path is actually down
+            limits = range(end[1], start[1] + 1)
+
+        for y in limits:
+            self.path.append(Tile(FLOOR, start[0], y))
+            for x in (start[0] - 1, start[0] + 1):
+                self.border.append(Tile(WALL, x, y))
+
+    def create_lshaped_path(self, start, end):
+        self.create_horz_path(start, (end[0] - 2, end[1]))
+        # self.create_vert_path( () ,
+
+    def draw(self):
+        for tile in self.path + self.border:
+            tile.draw()
+
+    # Smallest possbile dimensions of a zigzag path
+    MIN_WIDTH_ZZ = 3
+    MIN_HEIGHT_ZZ = 3
+
 class Dungeon(pygame.sprite.Sprite):
     """ Represents the dungeon
 
@@ -168,6 +249,7 @@ class Dungeon(pygame.sprite.Sprite):
         dungeon upon. In addition, the dungeon stores the tiles at every
         position within a tilemap. Lastly, a list of rooms is also stored.
     """
+    ENABLE_GEN = False # Used for testing
     def __init__(self, height=MAP_HEIGHT, width=MAP_WIDTH, tile_size=TILE_SIZE):
         """ Creates new dungeon object
 
@@ -187,6 +269,7 @@ class Dungeon(pygame.sprite.Sprite):
         self.height = height
         self.screen = pygame.display.get_surface()
         self.rooms = []
+        self.hallways = []
 
         # Initialize tile map
         self.tile_map = [
@@ -194,30 +277,47 @@ class Dungeon(pygame.sprite.Sprite):
                 range(self.width)] for row in range(self.height)
         ]
         self.draw((self.width,), (self.height,))
-        self.generate_dungeon(0, 0, self.width, self.height)
+        if Dungeon.ENABLE_GEN:
+            self.generate_dungeon(0, 0, self.width, self.height)
+        else:
+            self.add_hallway()
+
+    def update_tilemap(self, iterable):
+        for tile in iterable:
+            self.tile_map[tile.y][tile.x] = tile
 
     def draw(self, x_limits, y_limits):
         """ Displays map on screen """
         for row in range(*y_limits):
             for col in range(*x_limits):
-                self.screen.blit(self.tile_map[row][col].get_img(),
-                            (col*TILE_SIZE, row*TILE_SIZE))
+                self.tile_map[row][col].draw()
+
+    def add_room(self, room_x, room_y, width, height):
+        room = Room(room_x, room_y, width, height)
+        self.rooms.append(room)
+        self.update_tilemap(room)
+        room.draw()
 
     def add_rand_room(self, region_x, region_y, region_width, region_height):
         """ Generates random room on map and adds to room list """
-        # Generate room
         room = Room.generate_room(region_x, region_y,
                                     region_width, region_height)
         self.rooms.append(room)
-
-        # Update tilemap
-        for tile in room:
-            self.tile_map[tile.y][tile.x] = tile
-
-        # Draw changed tiles
-        self.draw((room.x, room.x + room.width), (room.y, room.y + room.height))
-
+        self.update_tilemap(room)
+        room.draw()
         return room
+
+    def add_hallway(self):
+        start = (1, 1)
+        end = (1, 5)
+        hallway = Hallway(start, end)
+        self.hallways.append(hallway)
+        # hallway.create_horz_path(start, end)
+        hallway.create_vert_path(start,end)
+        self.update_tilemap(hallway.get_path() + hallway.get_border())
+        hallway.draw()
+        # for tile in hallway.get_path() + hallway.get_border():
+        #     tile.draw()
 
     MIN_WIDTH = Room.MIN_WIDTH + 2
     MIN_HEIGHT = Room.MIN_HEIGHT + 2
@@ -264,9 +364,10 @@ class Dungeon(pygame.sprite.Sprite):
             """ If you subtract the minimum dungeon height from the top and
                 bottom of the region, you are left with a sort of bandwidth
                 regin where the split line can be placed such that each
-                subregion can hold a region of the minimum width such that a
+                subregion can hold a region of the minimum height such that a
                 room will be contained within the region and the room will be
-                surrounded by void.
+                surrounded by void. If such a bandwith cannot be created, then
+                the region cannot be split horizontally.
             """
             print("can't split horizontally")
             split = False
