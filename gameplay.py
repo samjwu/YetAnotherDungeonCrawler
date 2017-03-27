@@ -14,7 +14,7 @@ enemy = gameplay_constants.Enemy(300, 300, gameplay_constants.enemy1_sprite, 1)
 
 while True:
     dungeon.draw()
-    level.display_surface.blit(gameplay_constants.player_sprite, (gameplay_constants.player_x, gameplay_constants.player_y))
+    level.display_surface.blit(gameplay_constants.player_sprite, (player.x, player.y))
     level.display_surface.blit(gameplay_constants.enemy1_sprite, (enemy.x, enemy.y))
 
     for event in pygame.event.get():
@@ -22,7 +22,7 @@ while True:
             pygame.quit()
             sys.exit()
 
-    enemy.chase_player(gameplay_constants.player_x, gameplay_constants.player_y)
+    enemy.chase_player(player.x, player.y)
 
     keys_pressed = pygame.key.get_pressed()
     if keys_pressed[K_LEFT]:

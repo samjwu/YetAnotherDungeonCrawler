@@ -5,15 +5,16 @@ import math
 
 import level
 import level_constants
+# import gameplay
 
 #set framerate
-FPS=30
+FPS = 30
 fpsClock=pygame.time.Clock()
 
 # player
 player_sprite = pygame.image.load("assets/images/calvin.png").convert_alpha()
-player_x = 0
-player_y = 0
+# player_x = 0
+# player_y = 0
 
 # enemies
 enemy1_sprite = pygame.image.load("assets/images/pikachu.png").convert_alpha()
@@ -48,18 +49,18 @@ class Player():
             dy (int): how far to move vertically
         '''
         self.x += dx * self.speed
-        self.y += dy * self.speed
+        self.y -= dy * self.speed
 
-        for tile in level.dungeon:
-            if self.rect.colliderect(tile.rect):
-                if dx > 0:
-                    self.rect.right = tile.rect.left
-                if dx < 0:
-                    self.rect.left = tile.rect.right
-                if dy > 0:
-                    self.rect.top = tile.rect.bottom
-                if dy < 0:
-                    self.rect.bottom = tile.rect.top
+        # for tile in gameplay.dungeon:
+        #     if self.rect.colliderect(tile.rect):
+        #         if dx > 0:
+        #             self.rect.right = tile.rect.left
+        #         if dx < 0:
+        #             self.rect.left = tile.rect.right
+        #         if dy > 0:
+        #             self.rect.top = tile.rect.bottom
+        #         if dy < 0:
+        #             self.rect.bottom = tile.rect.top
 
 
 class Enemy():
@@ -74,6 +75,7 @@ class Enemy():
             sprite (image): picture used for enemy
             speed (int): how fast enemy should move
         '''
+        self.rect = pygame.Rect(x, y, 30,30) #todo
         self.x = x
         self.y = y
         self.sprite = sprite
