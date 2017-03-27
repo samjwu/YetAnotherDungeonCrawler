@@ -180,23 +180,23 @@ class Hallway(pygame.sprite.Sprite):
                 end (tuple: int): end position of hallway (adjacent to a door)
                 width (int): width of hallway
                 height (int): height of hallway
-                path (list: Tile()): list of tiles corresponding to the path of
+                path (dict: Tile()): list of tiles corresponding to the path of
                                     the hallway
         """
         if path is None:
-            path = []
+            path = {}
         self.start = start
         self.end = end
         # self.width = width
         # self.height = height
-        self.path = []
-        self.border = []
+        self.path = path
+        self.border = {}
 
     def get_path(self):
-        return self.path
+        return list(self.path.values())
 
     def get_border(self):
-        return self.border
+        return list(self.border.values())
 
     def create_horz_path(self, start, end):
         # Assume path to right first
@@ -206,9 +206,11 @@ class Hallway(pygame.sprite.Sprite):
             limits = range(end[0], start[0] + 1)
 
         for x in limits:
-            self.path.append(Tile(FLOOR, x, start[1]))
-            for y in (start[1] - 1, start[1] + 1):
-                self.border.append(Tile(WALL, x, y))
+            for y in (start[1] - 1, start[1], start[1] + 1):
+                if y == start[1]:
+                    self.path[(x,y)] = Tile(FLOOR, x, y)
+                else:
+                    self.border[(x,y)] = Tile(WALL, x, y)
 
     def create_vert_path(self, start, end):
         # Assume path is up
@@ -218,16 +220,51 @@ class Hallway(pygame.sprite.Sprite):
             limits = range(end[1], start[1] + 1)
 
         for y in limits:
-            self.path.append(Tile(FLOOR, start[0], y))
-            for x in (start[0] - 1, start[0] + 1):
-                self.border.append(Tile(WALL, x, y))
+            for x in (start[0] - 1, start[0], start[0] + 1):
+                if x == start[0]:
+                    self.path[(x, y)] = Tile(FLOOR, x, y)
+                else:
+                    self.border[(x, y)] = Tile(WALL, x, y)
+
+    def create_corner(self, start, end):
+        # Find small section of floor tiles in corner
+        corner_path = [(end[0], start[1]),]
+        if start[0] < end[0]:
+            corner_path.append((end[0] - 1, start[1]))
+        else:
+            corner_path.append((end[0] + 1, start[1]),)
+        if start[1] < end[1]:
+            corner_path.append((end[0], start[1] + 1))
+        else:
+            corner_path.append((end[0], start[1] - 1))
+
+        # Create border
+        for y in range(start[1] - 1, start[1] + 2):
+            for x in range(end[0] - 1, end[0] + 2):
+                if (x, y) in corner_path:
+                    self.path[(x, y)] = Tile(FLOOR, x, y)
+                else:
+                    self.border[(x,y)] = Tile(WALL, x, y)
 
     def create_lshaped_path(self, start, end):
-        self.create_horz_path(start, (end[0] - 2, end[1]))
-        # self.create_vert_path( () ,
+        # Create straight horizontal portion
+        h_offset = -2
+        if end[0] < start[0]:
+            h_offset = 2
+        self.create_horz_path(start, (end[0] + h_offset, end[1]))
+        # Create straight vertical portion
+        v_offset = 2
+        if end[1] < start[1]:
+            v_offset = -2
+        self.create_vert_path((end[0], start[1] + v_offset), end)
+        # Draw corners
+        self.create_corner(start, end)
 
     def draw(self):
-        for tile in self.path + self.border:
+        for tile in self.path.values():
+            tile.draw()
+
+        for tile in self.border.values():
             tile.draw()
 
     # Smallest possbile dimensions of a zigzag path
@@ -308,16 +345,15 @@ class Dungeon(pygame.sprite.Sprite):
         return room
 
     def add_hallway(self):
-        start = (1, 1)
-        end = (1, 5)
+        start = (1, 15)
+        end = (15, 1)
         hallway = Hallway(start, end)
         self.hallways.append(hallway)
         # hallway.create_horz_path(start, end)
-        hallway.create_vert_path(start,end)
+        # hallway.create_vert_path(start,end)
+        hallway.create_lshaped_path(start, end)
         self.update_tilemap(hallway.get_path() + hallway.get_border())
         hallway.draw()
-        # for tile in hallway.get_path() + hallway.get_border():
-        #     tile.draw()
 
     MIN_WIDTH = Room.MIN_WIDTH + 2
     MIN_HEIGHT = Room.MIN_HEIGHT + 2
