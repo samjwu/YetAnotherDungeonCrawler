@@ -22,10 +22,8 @@ enemy1_sprite = pygame.image.load("assets/images/pikachu.png").convert_alpha()
 # enemy1_y = 300
 # enemy1_speed = 1
 
-
 class Player():
     '''Player class'''
-
     def __init__(self, x, y, sprite, speed):
         '''
         Create a player object
@@ -51,6 +49,16 @@ class Player():
         self.x += dx * self.speed
         self.y -= dy * self.speed
 
+        # if self.rect.colliderect(enemy.rect):
+        #     if dx > 0:
+        #         self.rect.right = enemy.rect.left
+        #     if dx < 0:
+        #         self.rect.left = enemy.rect.right
+        #     if dy > 0:
+        #         self.rect.top = enemy.rect.bottom
+        #     if dy < 0:
+        #         self.rect.bottom = enemy.rect.top
+
         # for tile in gameplay.dungeon:
         #     if self.rect.colliderect(tile.rect):
         #         if dx > 0:
@@ -62,10 +70,21 @@ class Player():
         #         if dy < 0:
         #             self.rect.bottom = tile.rect.top
 
+    def collision(self, enemy_list):
+        '''
+        Move the player away from other objects when it collides with them.
+        Arguments:
+            enemy_list (list): a list that the function will check to see
+            whether the player is colliding with an enemy
+        '''
+        for enemy in enemy_list:
+            if self.collide(enemy.rect):
+                print('collision')
+                #do collision calc.
+
 
 class Enemy():
     '''Class for enemy objects'''
-
     def __init__(self, x, y, sprite, speed):
         '''
         Create an enemy object
