@@ -1,6 +1,7 @@
 #modules/libraries
 import pygame, sys, time
 from pygame.locals import *
+import numpy as np
 
 import level
 # import level_constants
@@ -29,9 +30,9 @@ class Player():
             sprite (image): picture used for player
             speed (int): how fast player should move
         '''
-        self.rect = pygame.Rect(0, 0, 30,30) #todo
-        self.x = x
-        self.y = y
+        self.rect = pygame.Rect(x, y, 30,30) #todo
+        # self.x = x
+        # self.y = y
         self.sprite = sprite
         self.speed = speed
 
@@ -42,8 +43,11 @@ class Player():
             dx (int): how far to move horiziontally
             dy (int): how far to move vertically
         '''
-        self.x += dx * self.speed
-        self.y -= dy * self.speed
+        # self.x += dx * self.speed
+        # self.y -= dy * self.speed
+
+        self.rect.x += dx * self.speed
+        self.rect.y -= dy * self.speed
 
         # if self.rect.colliderect(enemy.rect):
         #     if dx > 0:
@@ -64,15 +68,19 @@ class Player():
                 if tilelist[row][col] == FLOOR:
                     if dx > 0:
                         print('collision')
-                        self.x -= 5
+                        # self.x -= 5
+                        self.rect.x -= 5
                     if dx < 0:
-                        self.x += 5
+                        # self.x += 5
+                        self.rect.x += 5
                         print('collision')
                     if dy > 0:
-                        self.y -= 5
+                        # self.y -= 5
+                        self.rect.y -= 5
                         print('collision')
                     if dy < 0:
-                        self.y += 5
+                        # self.y += 5
+                        self.rect.y += 5
                         print('collision')
 
                 # print("TILE: ",tilelist[row][col])
@@ -94,9 +102,11 @@ class Player():
             whether the player is colliding with an enemy
         '''
         for enemy in enemy_list:
-            if self.rect.colliderect(enemy):
+            # print('checkenemies: ',enemy)
+            if self.rect.colliderect(enemy.rect):
                 print('collision')
-                #do collision calc.
+                self.rect.right = enemy.rect.left
+                self.rect.bottom = enemy.rect.top
 
 
 class Enemy():
@@ -111,8 +121,8 @@ class Enemy():
             speed (int): how fast enemy should move
         '''
         self.rect = pygame.Rect(x, y, 30,30) #todo
-        self.x = x
-        self.y = y
+        # self.x = x
+        # self.y = y
         self.sprite = sprite
         self.speed = speed
 
@@ -125,6 +135,7 @@ class Enemy():
             sprite (image): picture used for enemy
             speed (int): how fast enemy should move
         '''
+        #todo
 
     def chase_player(self, player_x, player_y):
         '''
@@ -133,28 +144,47 @@ class Enemy():
             player_x (int): horizontal position of player
             player_y (int): vertical position of player
         '''
-        dist_x = self.x - player_x
-        dist_y = self.y - player_y
-        dist_tot = math.hypot(dist_x, dist_y)
-        dx = dist_x / dist_tot
-        dy = dist_y / dist_tot
-        self.x -= dx * self.speed
-        self.y -= dy * self.speed
+        # dist_x = self.x - player_x
+        # dist_y = self.y - player_y
 
-player = Player(0, 0, player_sprite, 5)
+        dir_x = np.sign(self.rect.x - player_x)
+        dir_y = np.sign(self.rect.y - player_y)
+
+        # dist_tot = math.hypot(dist_x, dist_y)
+        # dist_tot = ( (dist_x)**2 + (dist_y)**2 )**(1/2)
+        # dx = dist_x / dist_tot
+        # dy = dist_y / dist_tot
+        # self.x -= dx * self.speed
+        # self.y -= dy * self.speed
+
+        # print('dxdy:', dx, dy)
+
+        # print(self.rect)
+
+        self.rect.x -= dir_x * self.speed
+        self.rect.y -= dir_y * self.speed
+
+
+player = Player(0, 0, player_sprite, 10)
 enemy = Enemy(300, 300, enemy1_sprite, 1)
+allenemies = [enemy]
 
 while True:
     dungeon.draw((dungeon.width,), (dungeon.height,))
-    level.DISPLAY_SURFACE.blit(player_sprite, (player.x, player.y))
-    level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy.x, enemy.y))
+    # level.DISPLAY_SURFACE.blit(player_sprite, (player.x, player.y))
+    # level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy.x, enemy.y))
+
+    level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
+    level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy.rect.x, enemy.rect.y))
 
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
 
-    enemy.chase_player(player.x, player.y)
+    # enemy.chase_player(player.x, player.y)
+    enemy.chase_player(player.rect.x, player.rect.y)
+    player.collision(allenemies)
 
     # print(dungeon.tile_map)
 
