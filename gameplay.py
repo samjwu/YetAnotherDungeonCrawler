@@ -55,16 +55,36 @@ class Player():
         #     if dy < 0:
         #         self.rect.bottom = enemy.rect.top
 
-        for tile in tilelist:
-            if self.rect.colliderect(tile.rect):
-                if dx > 0:
-                    self.rect.right = tile.rect.left
-                if dx < 0:
-                    self.rect.left = tile.rect.right
-                if dy > 0:
-                    self.rect.top = tile.rect.bottom
-                if dy < 0:
-                    self.rect.bottom = tile.rect.top
+        # print(tilelist)
+
+        # for tile in tilelist:
+        #     print(tile)
+        for row in range(MAP_HEIGHT):
+            for col in range(MAP_WIDTH):
+                if tilelist[row][col] == FLOOR:
+                    if dx > 0:
+                        print('collision')
+                        self.x -= 5
+                    if dx < 0:
+                        self.x += 5
+                        print('collision')
+                    if dy > 0:
+                        self.y -= 5
+                        print('collision')
+                    if dy < 0:
+                        self.y += 5
+                        print('collision')
+
+                # print("TILE: ",tilelist[row][col])
+                # if self.rect.colliderect(tilelist[row][col]):
+                #     if dx > 0:
+                #         self.rect.right = tilelist[row][col].rect.left
+                #     if dx < 0:
+                #         self.rect.left = tilelist[row][col].rect.right
+                #     if dy > 0:
+                #         self.rect.top = tilelist[row][col].rect.bottom
+                #     if dy < 0:
+                #         self.rect.bottom = tilelist[row][col].rect.top
 
     def collision(self, enemy_list):
         '''
@@ -136,15 +156,17 @@ while True:
 
     enemy.chase_player(player.x, player.y)
 
+    # print(dungeon.tile_map)
+
     keys_pressed = pygame.key.get_pressed()
     if keys_pressed[K_LEFT]:
-        player.move(-1,0,dungeon.tile_map())
+        player.move(-1,0,dungeon.tile_map)
     if keys_pressed[K_RIGHT]:
-        player.move(1,0,dungeon.tile_map())
+        player.move(1,0,dungeon.tile_map)
     if keys_pressed[K_UP]:
-        player.move(0,1,dungeon.tile_map())
+        player.move(0,1,dungeon.tile_map)
     if keys_pressed[K_DOWN]:
-        player.move(0,-1,dungeon.tile_map())
+        player.move(0,-1,dungeon.tile_map)
 
     #todo: find out where tile objects are stored
     #todo: give tiles a rect attribute
