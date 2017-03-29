@@ -41,8 +41,12 @@ class Tile(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.image = tile_images.get(self.tile_id)
-        self.rect = (x, y, 30, 30) #for collisions
         self.screen = pygame.display.get_surface()
+        if tile_id == WALL:
+            self.rect = pygame.Rect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE) #for collisions
+        else:
+            self.rect = pygame.Rect(x*TILE_SIZE, y*TILE_SIZE, 0, 0)
+            # self.rect = pygame.Rect(x*TILE_SIZE, y*TILE_SIZE, 0, 0)
 
     def get_id(self):
         return self.tile_id
@@ -50,6 +54,7 @@ class Tile(pygame.sprite.Sprite):
     def get_img(self):
         return self.image
 
+    #string override to print id instead of sprite object
     def __str__(self):
         return str(self.tile_id)
 
