@@ -3,6 +3,7 @@ import pygame, sys, time
 from pygame.locals import *
 import numpy as np
 import math
+import random
 
 import level
 # import level_constants
@@ -44,53 +45,11 @@ class Player():
             dx (int): how far to move horiziontally
             dy (int): how far to move vertically
         '''
-        # self.x += dx * self.speed
-        # self.y -= dy * self.speed
-
         #todo: constrain to map width/height
         self.rect.x += dx * self.speed
         self.rect.y -= dy * self.speed
 
-        # print(self.rect)
         print('player: ',self.rect)
-
-        # if self.rect.colliderect(enemy.rect):
-        #     if dx > 0:
-        #         self.rect.right = enemy.rect.left
-        #     if dx < 0:
-        #         self.rect.left = enemy.rect.right
-        #     if dy > 0:
-        #         self.rect.top = enemy.rect.bottom
-        #     if dy < 0:
-        #         self.rect.bottom = enemy.rect.top
-
-        # print(tilelist)
-
-        # for tile in tilelist:
-            # print(tile)
-        # for row in range(MAP_HEIGHT):
-        #     for col in range(MAP_WIDTH):
-        #         # print(tilelist[row][col])
-        #         if tilelist[row][col] == FLOOR and self.rect.colliderect(tilelist[row][col].rect):
-        #             if self.rect.colliderect(tile.rect):
-        #                 print('collision')
-        #                 if dx > 0:
-        #                     print('collision')
-        #                     # self.x -= 5
-        #                     self.rect.right = tile.rect.left - TILE_SIZE
-        #                 if dx < 0:
-        #                     # self.x += 5
-        #                     self.rect.left = tile.rect.right
-        #                     print('collision')
-        #                 if dy > 0:
-        #                     # self.y -= 5
-        #                     self.rect.top = tile.rect.bottom
-        #                     print('collision')
-        #                 if dy < 0:
-        #                     # self.y += 5
-        #                     self.rect.bottom = tile.rect.top - TILE_SIZE
-        #                     print('collision')
-
 
         row = int(math.ceil(self.rect.y/TILE_SIZE))
         col = int(math.ceil(self.rect.x/TILE_SIZE))
@@ -112,17 +71,6 @@ class Player():
             if dy < 0:
                 self.rect.bottom = tile.rect.top
                 print('collision')
-
-                # print("TILE: ",tilelist[row][col])
-                # if self.rect.colliderect(tilelist[row][col]):
-                #     if dx > 0:
-                #         self.rect.right = tilelist[row][col].rect.left
-                #     if dx < 0:
-                #         self.rect.left = tilelist[row][col].rect.right
-                #     if dy > 0:
-                #         self.rect.top = tilelist[row][col].rect.bottom
-                #     if dy < 0:
-                #         self.rect.bottom = tilelist[row][col].rect.top
 
     def collision(self, enemy_list):
         '''
@@ -165,7 +113,12 @@ class Enemy():
             sprite (image): picture used for enemy
             speed (int): how fast enemy should move
         '''
-        #todo
+        # x =
+        # y =
+        # sprite =
+        # speed =
+        newenemy = Enemy(x, y, sprite, speed)
+        return newenemy
 
     def chase_player(self, player):
         '''
@@ -173,27 +126,15 @@ class Enemy():
         Arguments:
             player (class): the player object
         '''
-        # dist_x = self.x - player_x
-        # dist_y = self.y - player_y
-
         dir_x = np.sign(self.rect.x - player.rect.x)
         dir_y = np.sign(self.rect.y - player.rect.y)
-
-        # dist_tot = math.hypot(dist_x, dist_y)
-        # dist_tot = ( (dist_x)**2 + (dist_y)**2 )**(1/2)
-        # dx = dist_x / dist_tot
-        # dy = dist_y / dist_tot
-        # self.x -= dx * self.speed
-        # self.y -= dy * self.speed
-
-        # print('dxdy:', dx, dy)
 
         # print(self.rect)
         if not self.rect.colliderect(player.rect):
             self.rect.x -= dir_x * self.speed
             self.rect.y -= dir_y * self.speed
-        # else:
-        #     print('collision')
+
+
 
 
 
@@ -203,8 +144,6 @@ allenemies = [enemy]
 
 while True:
     dungeon.draw((dungeon.width,), (dungeon.height,))
-    # level.DISPLAY_SURFACE.blit(player_sprite, (player.x, player.y))
-    # level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy.x, enemy.y))
 
     level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
     level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy.rect.x, enemy.rect.y))
@@ -228,19 +167,6 @@ while True:
         player.move(0,1,dungeon.tile_map)
     if keys_pressed[K_DOWN]:
         player.move(0,-1,dungeon.tile_map)
-
-    #todo: find out where tile objects are stored
-    #todo: give tiles a rect attribute
-    # for tile in dungeon:
-    #     if player.rect.colliderect(tile.rect):
-    #         if dx > 0:
-    #             player.rect.right = tile.rect.left
-    #         if dx < 0:
-    #             player.rect.left = tile.rect.right
-    #         if dy > 0:
-    #             player.rect.top = tile.rect.bottom
-    #         if dy < 0:
-    #             player.rect.bottom = tile.rect.top
 
     pygame.display.update()
     fpsClock.tick(FPS)
