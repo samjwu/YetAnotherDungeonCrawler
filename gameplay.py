@@ -32,7 +32,7 @@ class Player():
             sprite (image): picture used for player
             speed (int): how fast player should move
         '''
-        self.rect = pygame.Rect(x, y, 30,30) #todo
+        self.rect = pygame.Rect(x, y, 30,30)
         # self.x = x
         # self.y = y
         self.sprite = sprite
@@ -45,9 +45,10 @@ class Player():
             dx (int): how far to move horiziontally
             dy (int): how far to move vertically
         '''
-        #todo: constrain to map width/height
-        self.rect.x += dx * self.speed
-        self.rect.y -= dy * self.speed
+        if self.rect.x > 0 and self.rect.x < MAP_WIDTH*TILE_SIZE:
+            self.rect.x += dx * self.speed
+        if self.rect.y > 0 and self.rect.y < MAP_HEIGHT*TILE_SIZE:
+            self.rect.y -= dy * self.speed
 
         print('player: ',self.rect)
 
@@ -98,7 +99,7 @@ class Enemy():
             sprite (image): picture used for enemy
             speed (int): how fast enemy should move
         '''
-        self.rect = pygame.Rect(x, y, 30,30) #todo
+        self.rect = pygame.Rect(x, y, 30,30)
         # self.x = x
         # self.y = y
         self.sprite = sprite
