@@ -345,8 +345,8 @@ class Dungeon(pygame.sprite.Sprite):
         return room
 
     def add_hallway(self):
-        start = (1, 15)
-        end = (15, 1)
+        start = (5, 3)
+        end = (13, 10)
         hallway = Hallway(start, end)
         self.hallways.append(hallway)
         # hallway.create_horz_path(start, end)
