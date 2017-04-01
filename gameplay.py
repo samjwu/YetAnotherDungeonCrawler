@@ -12,7 +12,6 @@ from gameplay_constants import *
 
 
 
-
 class Player():
     '''Player class'''
     def __init__(self, x, y, sprite, speed):
@@ -133,20 +132,69 @@ class Enemy():
             self.rect.y -= dir_y * self.speed
 
 
+class TileGraph():
+    '''Undirected graph of tiles'''
+    def __init__(self):
+        self.edges = {}
+
+    def getdungeonedges(self):
+        '''
+        Method to fill TileGraph instance with undirected edges of a Dungeon
+        instance
+        '''
+        for col in range(MAP_WIDTH-1):
+            for row in range(MAP_HEIGHT-1):
+                currtile = dungeon.tile_map[row][col]
+                righttile = dungeon.tile_map[row+1][col]
+                downtile = dungeon.tile_map[row][col+1]
+                if currtile != WALL:
+                    #??? row, col ??? todo
+                    if righttile != WALL:
+                        self.edges[(col,row)] = (col,row+1)
+                        self.edges[(col,row+1)] = (col,row)
+                    if downtile != WALL:
+                        self.edges[(col,row)] = (col+1,row)
+                        self.edges[(col+1,row)] = (col,row)
+
+    def neighbors(self, id):
+        return self.edges[id]
+
 
 
 
 pygame.init()
 
 dungeon = level.Dungeon()
-room = level.Room(0,0,5,5)
 
+room1 = level.Room(0,0,6,6)
+dungeon.rooms.append(room1)
+dungeon.update_tilemap(room1)
+room1.draw()
+
+room2 = level.Room(10,10,6,6)
+dungeon.rooms.append(room2)
+dungeon.update_tilemap(room2)
+room2.draw()
+
+start = (5, 3)
+end = (13, 10)
+hallway = level.Hallway(start, end)
+dungeon.hallways.append(hallway)
+hallway.create_lshaped_path(start, end)
+dungeon.update_tilemap(hallway.get_path() + hallway.get_border())
+hallway.draw()
+
+dungeon.add_hallway()
 
 player = Player(30, 30, player_sprite, 10)
-enemy = Enemy(300, 300, enemy1_sprite, 1)
+enemy = Enemy(330, 330, enemy1_sprite, 1)
 allenemies = [enemy]
 
+tilegraph = TileGraph()
+tilegraph.getdungeonedges()
+# print(tilegraph.edges)
 
+'''
 while True:
     dungeon.draw((dungeon.width,), (dungeon.height,))
 
@@ -175,3 +223,5 @@ while True:
 
     pygame.display.update()
     fpsClock.tick(FPS)
+
+'''
