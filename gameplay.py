@@ -6,19 +6,11 @@ import math
 import random
 
 import level
-# import level_constants
 from level_constants import *
 from gameplay_constants import *
 
-pygame.init()
 
-dungeon = level.Dungeon()
-# dungeon.create_rand_room()
-# room = level.Room(0, 0, 5, 5)
-# for row in range(room.y, room.y + room.height):
-#     for col in range(room.x, room.x + room.width):
-#         dungeon.screen.blit(dungeon.tile_map[row][col].get_img(),
-#                     (col*dungeon.TILE_SIZE, row*dungeon.TILE_SIZE))
+
 
 
 class Player():
@@ -33,8 +25,6 @@ class Player():
             speed (int): how fast player should move
         '''
         self.rect = pygame.Rect(x, y, 30,30)
-        # self.x = x
-        # self.y = y
         self.sprite = sprite
         self.speed = speed
 
@@ -45,9 +35,16 @@ class Player():
             dx (int): how far to move horiziontally
             dy (int): how far to move vertically
         '''
-        if self.rect.x > 0 and self.rect.x < MAP_WIDTH*TILE_SIZE:
+        if self.rect.x < -1:
+            self.rect.x = 1
+        elif self.rect.x > (MAP_WIDTH-2)*(TILE_SIZE):
+            self.rect.x = (MAP_WIDTH-2)*(TILE_SIZE)
+        elif self.rect.y < -1:
+            self.rect.y = 1
+        elif self.rect.y > (MAP_HEIGHT-2)*(TILE_SIZE):
+            self.rect.y = (MAP_HEIGHT-2)*(TILE_SIZE)
+        else:
             self.rect.x += dx * self.speed
-        if self.rect.y > 0 and self.rect.y < MAP_HEIGHT*TILE_SIZE:
             self.rect.y -= dy * self.speed
 
         print('player: ',self.rect)
@@ -139,9 +136,16 @@ class Enemy():
 
 
 
-player = Player(0, 0, player_sprite, 10)
+pygame.init()
+
+dungeon = level.Dungeon()
+room = level.Room(0,0,5,5)
+
+
+player = Player(30, 30, player_sprite, 10)
 enemy = Enemy(300, 300, enemy1_sprite, 1)
 allenemies = [enemy]
+
 
 while True:
     dungeon.draw((dungeon.width,), (dungeon.height,))
