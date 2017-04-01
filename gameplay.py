@@ -4,6 +4,8 @@ from pygame.locals import *
 import numpy as np
 import math
 import random
+import collections
+import heapq
 
 import level
 from level_constants import *
@@ -132,10 +134,30 @@ class Enemy():
             self.rect.y -= dir_y * self.speed
 
 
+class Queue():
+    '''
+    Use a deque from collections library as a Queue
+    '''
+    def __init__(self):
+        self.elements = collections.deque()
+
+    def isempty(self):
+        return len(self.elements) == 0
+
+    def push(self, x):
+        self.elements.append(x)
+
+    def pop(self):
+        return self.elements.popleft()
+
+
 class TileGraph():
     '''Undirected graph of tiles'''
     def __init__(self):
         self.edges = {}
+        for col in range(MAP_WIDTH):
+            for row in range(MAP_HEIGHT):
+                self.edges[(col,row)] = list()
 
     def getdungeonedges(self):
         '''
@@ -150,16 +172,34 @@ class TileGraph():
                 if currtile != WALL:
                     #??? row, col ??? todo
                     if righttile != WALL:
-                        self.edges[(col,row)] = (col,row+1)
-                        self.edges[(col,row+1)] = (col,row)
+                        self.edges[(col,row)].append( (col+1,row) )
+                        self.edges[(col+1,row)].append( (col,row) )
+                        # self.edges[(col,row)] = (col+1,row)
+                        # self.edges[(col+1,row)] = (col,row)
                     if downtile != WALL:
-                        self.edges[(col,row)] = (col+1,row)
-                        self.edges[(col+1,row)] = (col,row)
+                        self.edges[(col,row+1)].append( (col,row) )
+                        self.edges[(col,row)].append( (col,row+1) )
+                        # self.edges[(col,row+1)] = (col,row)
+                        # self.edges[(col,row)] = (col,row+1)
 
-    def neighbors(self, id):
-        return self.edges[id]
+    def neighbors(self, index):
+        return self.edges[index]
 
 
+def bfs(graph, startloc):
+    tosearch = Queue()
+    tosearch.push(startloc)
+    visited = {}
+    visited[startloc] = True
+
+    while not tosearch.isempty():
+        currenttile = tosearch.pop()
+        # print('currenttile: ',currenttile)
+        for nexttile in graph.neighbors(currenttile):
+            # print('nexttile: ',nexttile)
+            if nexttile not in visited:
+                tosearch.push(nexttile)
+                visited[nexttile] = True
 
 
 pygame.init()
@@ -193,6 +233,8 @@ allenemies = [enemy]
 tilegraph = TileGraph()
 tilegraph.getdungeonedges()
 # print(tilegraph.edges)
+
+bfs(tilegraph, (1,1))
 
 '''
 while True:
