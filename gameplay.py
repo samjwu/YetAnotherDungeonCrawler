@@ -136,7 +136,8 @@ class Enemy():
 
 class Queue():
     '''
-    Use a deque from collections library as a Queue
+    Use a deque from collections library as a queue
+    (append elements to back and pop from front)
     '''
     def __init__(self):
         self.elements = collections.deque()
@@ -153,7 +154,8 @@ class Queue():
 
 class PriorityQueue:
     '''
-    Use a binary heap from heapq library as a Priority Queue
+    Get the binary heap from heapq library and use it as a priority queue
+    (note heap queue is a min heap that uses a list as heap)
     '''
     def __init__(self):
         self.elements = []
@@ -162,6 +164,7 @@ class PriorityQueue:
         return len(self.elements) == 0
 
     def push(self, item, priority):
+        #make heap element a tuple to give priorities to items
         heapq.heappush(self.elements, (priority, item))
 
     def pop(self):
@@ -255,9 +258,6 @@ class WeightedTileGrid(TileGrid):
         super().__init__(width, height)
         self.weights = {}
 
-    def setcosts(self):
-        self.weight
-
     def cost(self, start, end):
         #heuristic:give each node a weight of 1
         return self.weights.pop(end, 1)
@@ -267,13 +267,47 @@ def bfs(graph, startloc, endloc):
     '''
     Breadth first search on the given graph
     Args:
-        graph (TileGraph): instance of the undirected graph of tiles
-        startloc (tuple): coordinates of tile
+        graph (TileGrid): instance of the undirected graph of tiles
+        startloc (tuple): coordinates of start tile
+        endloc (tuple): coordinates of end tile
     '''
     tosearch = Queue()
     tosearch.push(startloc)
+    #dict with path from start to end
     visited = {}
-    visited[startloc] = True
+    visited[startloc] = None
+
+    while not tosearch.isempty():
+        currenttile = tosearch.pop()
+        # print('currenttile: ',currenttile)
+
+        #early exit
+        if currenttile == endloc:
+            break
+
+        for nexttile in graph.neighbors(currenttile):
+            # print('nexttile: ',nexttile)
+            if nexttile not in visited:
+                tosearch.push(nexttile)
+                visited[nexttile] = currenttile
+    return visited
+
+
+def dijkstra(graph, startloc, endloc):
+    '''
+    Search on the given graph with Dijkstra's Algorithm
+    Args:
+        graph (WeightedTileGrid): instance of the undirected graph of tiles
+        startloc (tuple): coordinates of start tile
+        endloc (tuple): coordinates of end tile
+    '''
+    tosearch = PriorityQueue()
+    tosearch.push(startloc, 0)
+    visited = {}
+    visited[startloc] = None
+    #dict with cost of each edge choice
+    pathcost = {}
+    pathcost[startloc] = 0
 
     while not tosearch.isempty():
         currenttile = tosearch.pop()
@@ -285,10 +319,14 @@ def bfs(graph, startloc, endloc):
 
         for nexttile in graph.neighbors(currenttile):
             # print('nexttile: ',nexttile)
-            if nexttile not in visited:
-                tosearch.push(nexttile)
-                visited[nexttile] = True
-    return visited
+            #newpathcost is currpathcost plus newedgecost
+            newpathcost = pathcost[currenttile] + graph.cost(currenttile, nexttile)
+            if nexttile not in visited or newpathcost < pathcost[nexttile]:
+                priority = newpathcost #priority for low path cost
+                tosearch.push(nexttile, priority)
+                visited[nexttile] = currenttile
+                pathcost[nexttile] = newpathcost
+    return visited, pathcost
 
 
 pygame.init()
@@ -322,17 +360,18 @@ allenemies = [enemy]
 # tilegraph = TileGraph()
 # tilegraph.getdungeonedges()
 # print(tilegraph.edges)
-# bfs(tilegraph, (1,1))
 
 # tilegrid = TileGrid(30,20)
 # tilegrid.getwalls()
 # print(tilegrid.walls)
-# print(bfs(tilegrid, (1,1)))
 
 wtgrid = WeightedTileGrid(30,20)
 wtgrid.getwalls()
 # print(wtgrid.walls)
+print('bfs')
 print(bfs(wtgrid, (1,1), (12,12)))
+print('dijkstra')
+print(dijkstra(wtgrid, (1,1), (12,12)))
 
 '''
 while True:
