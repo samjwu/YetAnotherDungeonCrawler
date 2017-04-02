@@ -103,7 +103,7 @@ class Enemy():
         self.sprite = sprite
         self.speed = speed
 
-    def generate_enemy(self, x, y, sprite, speed):
+    def generateenemy(self, x, y, sprite, speed):
         '''
         Generate an enemy
         Arguments:
@@ -151,6 +151,23 @@ class Queue():
         return self.elements.popleft()
 
 
+class PriorityQueue:
+    '''
+    Use a binary heap from heapq library as a Priority Queue
+    '''
+    def __init__(self):
+        self.elements = []
+
+    def isempty(self):
+        return len(self.elements) == 0
+
+    def push(self, item, priority):
+        heapq.heappush(self.elements, (priority, item))
+
+    def pop(self):
+        return heapq.heappop(self.elements)[1]
+
+
 class TileGraph():
     '''Undirected graph of tiles'''
     def __init__(self):
@@ -169,14 +186,14 @@ class TileGraph():
                 currtile = dungeon.tile_map[row][col]
                 righttile = dungeon.tile_map[row+1][col]
                 downtile = dungeon.tile_map[row][col+1]
-                if currtile != WALL:
+                if currtile.tile_id != WALL:
                     #??? row, col ??? todo
-                    if righttile != WALL:
+                    if righttile.tile_id != WALL:
                         self.edges[(col,row)].append( (col+1,row) )
                         self.edges[(col+1,row)].append( (col,row) )
                         # self.edges[(col,row)] = (col+1,row)
                         # self.edges[(col+1,row)] = (col,row)
-                    if downtile != WALL:
+                    if downtile.tile_id != WALL:
                         self.edges[(col,row+1)].append( (col,row) )
                         self.edges[(col,row)].append( (col,row+1) )
                         # self.edges[(col,row+1)] = (col,row)
@@ -186,7 +203,49 @@ class TileGraph():
         return self.edges[index]
 
 
+class TileGrid():
+    '''
+    A grid-based graph class to represent tiles
+    Args:
+        width (int): map width
+        height (int): map height
+    '''
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.walls = []
+
+    def getwalls(self):
+        for col in range(MAP_WIDTH):
+            for row in range(MAP_HEIGHT):
+                currtile = dungeon.tile_map[row][col]
+                # print(currtile)
+                if currtile.tile_id == WALL:
+                    self.walls.append((col,row))
+
+    def constrained(self, index):
+        (x, y) = index
+        return 0 <= x < self.width and 0 <= y < self.height
+
+    def notwall(self, index):
+        return index not in self.walls
+
+    def neighbors(self, index):
+        (x, y) = index
+        results = [(x+1, y), (x, y-1), (x-1, y), (x, y+1)]
+        if (x + y) % 2 == 0: results.reverse()
+        results = filter(self.constrained, results)
+        results = filter(self.notwall, results)
+        return results
+
+
 def bfs(graph, startloc):
+    '''
+    Breadth first search on the given graph
+    Args:
+        graph (TileGraph): instance of the undirected graph of tiles
+        startloc (tuple): coordinates of tile
+    '''
     tosearch = Queue()
     tosearch.push(startloc)
     visited = {}
@@ -230,11 +289,14 @@ player = Player(30, 30, player_sprite, 10)
 enemy = Enemy(330, 330, enemy1_sprite, 1)
 allenemies = [enemy]
 
-tilegraph = TileGraph()
-tilegraph.getdungeonedges()
+# tilegraph = TileGraph()
+# tilegraph.getdungeonedges()
 # print(tilegraph.edges)
+# bfs(tilegraph, (1,1))
 
-bfs(tilegraph, (1,1))
+tilegrid = TileGrid(30,20)
+tilegrid.getwalls()
+print(tilegrid.walls)
 
 '''
 while True:
@@ -265,5 +327,4 @@ while True:
 
     pygame.display.update()
     fpsClock.tick(FPS)
-
 '''
