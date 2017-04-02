@@ -239,6 +239,30 @@ class TileGrid():
         return results
 
 
+class WeightedTileGrid(TileGrid):
+    '''
+    A weighted grid-based graph class inherited from the TileGrid class.
+    This derived class has all the methods of the base class (TileGrid) and
+    needs to have the same arguments as TileGrid.
+    Note super is useful for dependency injection
+    (eg: for changing base class and less verbosity/explicit references)
+    and multiple inheritance (not used here).
+    Args:
+        width (int): map width
+        height (int): map height
+    '''
+    def __init__(self, width, height):
+        super().__init__(width, height)
+        self.weights = {}
+
+    def setcosts(self):
+        self.weight
+
+    def cost(self, start, end):
+        #heuristic:give each node a weight of 1
+        return self.weights.pop(end, 1)
+
+
 def bfs(graph, startloc, endloc):
     '''
     Breadth first search on the given graph
@@ -254,6 +278,7 @@ def bfs(graph, startloc, endloc):
     while not tosearch.isempty():
         currenttile = tosearch.pop()
         # print('currenttile: ',currenttile)
+
         #early exit for Best-First Search and A*
         if currenttile == endloc:
             break
@@ -299,10 +324,15 @@ allenemies = [enemy]
 # print(tilegraph.edges)
 # bfs(tilegraph, (1,1))
 
-tilegrid = TileGrid(30,20)
-tilegrid.getwalls()
+# tilegrid = TileGrid(30,20)
+# tilegrid.getwalls()
 # print(tilegrid.walls)
-print(bfs(tilegrid, (1,1)))
+# print(bfs(tilegrid, (1,1)))
+
+wtgrid = WeightedTileGrid(30,20)
+wtgrid.getwalls()
+# print(wtgrid.walls)
+print(bfs(wtgrid, (1,1), (12,12)))
 
 '''
 while True:
