@@ -260,7 +260,7 @@ class TileGrid():
         (x, y) = index
         results = [(x+1, y), (x, y-1), (x-1, y), (x, y+1)]
         if (x + y) % 2 == 0: results.reverse()
-        results = filter(self.constrained, results)
+        # results = filter(self.constrained, results)
         results = filter(self.notwall, results)
         return results
 
@@ -289,11 +289,14 @@ class WeightedTileGrid(TileGrid):
 def bfs(graph, startloc, endloc):
     '''
     Breadth first search on the given graph.
+    Time Complexity:
+        O(|V|+2|E|)
     Args:
         graph (TileGrid): instance of the undirected graph of tiles
         startloc (tuple): coordinates of start tile
         endloc (tuple): coordinates of end tile
     '''
+    #note push/pop for deques take O(1) time
     tosearch = Queue()
     tosearch.push(startloc)
     #dict with path from start to end
@@ -308,8 +311,11 @@ def bfs(graph, startloc, endloc):
         if currenttile == endloc:
             break
 
+        #neighbors takes O(|V|) since visits all vertices
         for nexttile in graph.neighbors(currenttile):
             # print('nexttile: ',nexttile)
+            #edge additions take O(2|E|) since undirected graph
+            #handshake lemma
             if nexttile not in visited:
                 tosearch.push(nexttile)
                 visited[nexttile] = currenttile
@@ -319,11 +325,15 @@ def bfs(graph, startloc, endloc):
 def dijkstra(graph, startloc, endloc):
     '''
     Search on the given graph with Dijkstra's Algorithm.
+    Time Complexity:
+        O((|V|+2|E|)+log|V|) = O(2|E|log|V|)
     Args:
         graph (WeightedTileGrid): instance of the undirected graph of tiles
         startloc (tuple): coordinates of start tile
         endloc (tuple): coordinates of end tile
     '''
+    #note push/pop take O(logn) time for binary heap
+    #since binary heaps have logn height
     tosearch = PriorityQueue()
     tosearch.push(startloc, 0)
     visited = {}
@@ -336,14 +346,16 @@ def dijkstra(graph, startloc, endloc):
         currenttile = tosearch.pop()
         # print('currenttile: ',currenttile)
 
-        #early exit for Best-First Search and A*
+        #early exit (needed for Best-First Search and A*)
         if currenttile == endloc:
             break
 
+        #neighbors takes O(|V|) since visits all vertices
         for nexttile in graph.neighbors(currenttile):
             # print('nexttile: ',nexttile)
             #newpathcost is currpathcost plus newedgecost
             newpathcost = pathcost[currenttile] + graph.cost(currenttile, nexttile)
+            #edge additions take O(2|E|) for undirected graph (handshake lemma)
             if nexttile not in visited or newpathcost < pathcost[nexttile]:
                 priority = newpathcost #priority for low path cost
                 tosearch.push(nexttile, priority)
@@ -404,9 +416,9 @@ hallway.draw()
 
 dungeon.add_hallway()
 
-player = Player(30, 30, player_sprite, 10)
-enemy = Enemy(360, 360, enemy1_sprite, 1)
-allenemies = [enemy]
+player = Player(player_x, player_y, player_sprite, player_speed)
+enemy1 = Enemy(enemy1_x, enemy1_y, enemy1_sprite, enemy1_speed)
+allenemies = [enemy1]
 
 # tilegraph = TileGraph()
 # tilegraph.getdungeonedges()
@@ -435,14 +447,14 @@ while True:
     dungeon.draw((dungeon.width,), (dungeon.height,))
 
     level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
-    level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy.rect.x, enemy.rect.y))
+    level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy1.rect.x, enemy1.rect.y))
 
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
 
-    enemy.chase_player(player)
+    enemy1.chase_player(player)
     player.collision(allenemies)
 
     # print(dungeon.tile_map)
