@@ -6,6 +6,8 @@ from level_constants import *
 sys.setrecursionlimit(30000)
 
 VISUALIZE = True
+ENABLE_GEN = True # Used for testing
+CHECK_SPLIT_FIRST = True
 
 def constrain(n, lower_limit, upper_limit):
     if n < lower_limit:
@@ -87,6 +89,8 @@ class Room(pygame.sprite.Group):
         # Init
         self.x = x
         self.y = y
+        self.interior = {}
+        self.border = {}
         self.center = ( (x + (width - 1)) // 2 , (y + (height - 1)) // 2 )
         self.width = width
         self.height = height
@@ -95,20 +99,27 @@ class Room(pygame.sprite.Group):
         for row in range(y, y + height):
             for col in (x, x + (width - 1)):
                 self.add(Tile(WALL, col, row))
+                self.interior[(col, row)] = Tile(FLOOR, col, row)
 
         # Generate horizontal borders
         for row in (y, y + (height - 1)):
             for col in range(x, x + width):
                 self.add(Tile(WALL, col, row))
+                self.border[(col, row)] = Tile(FLOOR, col, row)
 
         # Generate interior of room
         for row in range(y + 1, (y + height) - 1):
             for col in range(x + 1, (x + width) - 1):
                 self.add(Tile(FLOOR, col, row))
+                self.border[(col, row)] = Tile(FLOOR, col, row)
 
     def draw(self):
         for tile in self.sprites():
             tile.draw()
+
+    def __str__(self):
+        return "Room: ( {}, {}, {}, {} )".format(self.x, self.y,
+                                                    self.width, self.height)
 
     # Class variables and methods
     MIN_WIDTH = 4
@@ -157,8 +168,7 @@ class Room(pygame.sprite.Group):
             room_y = random.randint(region_y + 1,
                         (region_y + region_height - 1) - room_height)
         room = cls(room_x, room_y, room_width, room_height)
-        print("room: ( {}, {}, {}, {} )".format(room_x, room_y,
-                                                room_width, room_height))
+        print(room)
         return room
 
 class Hallway(pygame.sprite.Sprite):
@@ -187,18 +197,25 @@ class Hallway(pygame.sprite.Sprite):
             path = {}
         self.start = start
         self.end = end
-        # self.width = width
-        # self.height = height
         self.path = path
         self.border = {}
 
     def get_path(self):
+        return self.path
+
+    def get_path_list(self):
         return list(self.path.values())
 
     def get_border(self):
+        return self.border
+
+    def get_border_list(self):
         return list(self.border.values())
 
-    def create_horz_path(self, start, end):
+    def create_horz_path(self, start=None, end=None, add_border=True):
+        if start is None and end is None:
+            start = self.start
+            end = self.end
         # Assume path to right first
         limits = range(start[0], end[0] + 1)
         if end[0] < start[0]:
@@ -209,10 +226,13 @@ class Hallway(pygame.sprite.Sprite):
             for y in (start[1] - 1, start[1], start[1] + 1):
                 if y == start[1]:
                     self.path[(x,y)] = Tile(FLOOR, x, y)
-                else:
+                elif add_border:
                     self.border[(x,y)] = Tile(WALL, x, y)
 
-    def create_vert_path(self, start, end):
+    def create_vert_path(self, start=None, end=None, add_border=True):
+        if start is None and end is None:
+            start = self.start
+            end = self.end
         # Assume path is up
         limits = range(start[1], end[1] + 1)
         if end[1] < start[1]:
@@ -223,49 +243,60 @@ class Hallway(pygame.sprite.Sprite):
             for x in (start[0] - 1, start[0], start[0] + 1):
                 if x == start[0]:
                     self.path[(x, y)] = Tile(FLOOR, x, y)
-                else:
+                elif add_border:
                     self.border[(x, y)] = Tile(WALL, x, y)
 
-    def create_corner(self, start, end):
-        # Find small section of floor tiles in corner
-        corner_path = [(end[0], start[1]),]
+    def create_corner(self, start, end, add_border=True):
+        # Create small section of floor tiles in corner
+        corner_path = {(end[0], start[1]),}
         if start[0] < end[0]:
-            corner_path.append((end[0] - 1, start[1]))
+            # Left
+            corner_path.add((end[0] - 1, start[1]))
         else:
-            corner_path.append((end[0] + 1, start[1]),)
+            # Right
+            corner_path.add((end[0] + 1, start[1]))
+
         if start[1] < end[1]:
-            corner_path.append((end[0], start[1] + 1))
+            # Down
+            corner_path.add((end[0], start[1] + 1))
         else:
-            corner_path.append((end[0], start[1] - 1))
+            # Up
+            corner_path.add((end[0], start[1] - 1))
 
         # Create border
         for y in range(start[1] - 1, start[1] + 2):
             for x in range(end[0] - 1, end[0] + 2):
                 if (x, y) in corner_path:
                     self.path[(x, y)] = Tile(FLOOR, x, y)
-                else:
+                elif add_border:
                     self.border[(x,y)] = Tile(WALL, x, y)
 
-    def create_lshaped_path(self, start, end):
+    def create_lshaped_path(self, start=None, end=None, add_border=True):
+        if start is None and end is None:
+            start = self.start
+            end = self.end
         # Create straight horizontal portion
         h_offset = -2
         if end[0] < start[0]:
             h_offset = 2
-        self.create_horz_path(start, (end[0] + h_offset, end[1]))
+        self.create_horz_path(start, (end[0] + h_offset, end[1]),
+            add_border=add_border)
         # Create straight vertical portion
         v_offset = 2
         if end[1] < start[1]:
             v_offset = -2
-        self.create_vert_path((end[0], start[1] + v_offset), end)
-        # Draw corners
+        self.create_vert_path((end[0], start[1] + v_offset), end,
+            add_border=add_border)
+
         self.create_corner(start, end)
 
-    def draw(self):
+    def draw(self, draw_border=True):
         for tile in self.path.values():
             tile.draw()
 
-        for tile in self.border.values():
-            tile.draw()
+        if draw_border:
+            for tile in self.border.values():
+                tile.draw()
 
     # Smallest possbile dimensions of a zigzag path
     MIN_WIDTH_ZZ = 3
@@ -286,7 +317,6 @@ class Dungeon(pygame.sprite.Sprite):
         dungeon upon. In addition, the dungeon stores the tiles at every
         position within a tilemap. Lastly, a list of rooms is also stored.
     """
-    ENABLE_GEN = False # Used for testing
     def __init__(self, height=MAP_HEIGHT, width=MAP_WIDTH, tile_size=TILE_SIZE):
         """ Creates new dungeon object
 
@@ -314,10 +344,10 @@ class Dungeon(pygame.sprite.Sprite):
                 range(self.width)] for row in range(self.height)
         ]
         self.draw((self.width,), (self.height,))
-        if Dungeon.ENABLE_GEN:
+        if ENABLE_GEN:
             self.generate_dungeon(0, 0, self.width, self.height)
-        else:
-            self.add_hallway()
+        # else:
+        #     self.add_hallway()
 
     def update_tilemap(self, iterable):
         for tile in iterable:
@@ -352,71 +382,135 @@ class Dungeon(pygame.sprite.Sprite):
         # hallway.create_horz_path(start, end)
         # hallway.create_vert_path(start,end)
         hallway.create_lshaped_path(start, end)
-        self.update_tilemap(hallway.get_path() + hallway.get_border())
+        self.update_tilemap(hallway.get_path_list() + hallway.get_border_list())
         hallway.draw()
 
     MIN_WIDTH = Room.MIN_WIDTH + 2
     MIN_HEIGHT = Room.MIN_HEIGHT + 2
     MAX_WIDTH = Room.MAX_WIDTH + 2
     MAX_HEIGHT = Room.MAX_HEIGHT + 2
+
     @staticmethod
-    def validate_region(region_width, region_height):
-        """ Check the dimensions of a region """
-        if region_width < Dungeon.MIN_WIDTH \
-            or region_height < Dungeon.MIN_HEIGHT:
-            # Too small
-            return -1
-        elif region_width <= Dungeon.MAX_WIDTH \
-            and region_height <= Dungeon.MAX_HEIGHT:
-            # Just right
-            return 0
+    def print_rooms(rooms):
+        for room in rooms:
+            print(room)
+
+    def connect_rooms(self, r1, r2):
+        choices = []
+        overlap_y = {y for y in range(r1.y + 1, r1.y + r1.height - 1)} \
+                        & {y for y in range(r2.y + 1, r2.y + r2.height - 1)}
+        if overlap_y:
+            choices.append("horz")
+        overlap_x = {x for x in range(r1.x + 1, r1.x + r1.width - 1)} \
+                        & {x for x in range(r2.x + 1, r2.x + r2.width - 1)}
+        if overlap_x:
+            choices.append("vert")
+
+        if not choices:
+            print("Must try zig-zag instead")
+            return
+
+        hallway_dir = random.choice(choices)
+        if hallway_dir == "horz":
+            # start = (random.choice())
+            door_y = random.choice(list(overlap_y))
+            if r1.x < r2.x:
+                r1_door_x = r1.x + r1.width - 1
+                r2_door_x = r2.x
+                start = (r1_door_x + 1, door_y)
+                end = (r2_door_x - 1, door_y)
+            else:
+                r1_door_x = r1.x
+                r2_door_x = r2.x + r2.width - 1
+                start = (r1_door_x - 1, door_y)
+                end = (r2_door_x + 1, door_y)
+            hallway = Hallway(start, end)
+            hallway.create_horz_path()
+            hallway.draw()
         else:
-            # Too big
-            return 1
+            door_x = random.choice(list(overlap_x))
+            if r1.y < r2.y:
+                r1_door_y = r1.y + r1.height - 1
+                r2_door_y = r2.y
+                start = (door_x, r1_door_y + 1)
+                end = (door_x, r2_door_y - 1)
+            else:
+                r1_door_y = r1.y
+                r2_door_y = r2.y + r2.height - 1
+                start = (door_x, r2_door_y + 1)
+                end = (door_x, r1_door_y - 1)
+            hallway = Hallway(start, end)
+            hallway.create_vert_path()
+            hallway.draw()
 
     def generate_dungeon(self, region_x, region_y, region_width, region_height):
         """ Creates dungeon using Binary Space Partitioning
 
             Binary Space Partitioning as applied to game map generation will
             recursively divide the dungeon along a random dimension (left,
-            right) each function call. Once the sub regions are of a desired
-            size, a room will be generated within the region. Since the room
-            within the region is surrounded by white space due to the way a
+            right) each function call. Once the sub regions cannot be split
+            anymore, a room will be generated within the region. Since the room
+            within the region is surrounded by void space due to the way a
             region is defined, no two rooms in the overall dungeon will
             collide. Note that the regions are built in a top-down fashion.
             However, to connection of the subregions must be done in a
-            bottom-up fashion. region in the dungeon must be connected to its
-            sister. Once all the regions have been connected, there is
+            bottom-up fashion. Each region in the dungeon must be connected to
+            its sister. Once all the regions have been connected, there is
             guaranteed to be a path from every room to every other room and
             thus the dungeon is complete.
 
         """
+        rooms = set()
+        # print("Room list: ")
+        # print(rooms)
         print("Generating")
         print("region: ( {}, {}, {}, {} )".format(region_x, region_y,
                                                 region_width, region_height))
 
-        split = True
-        if region_height < 2*Dungeon.MIN_HEIGHT:
-            """ If you subtract the minimum dungeon height from the top and
+        if CHECK_SPLIT_FIRST:
+            choices = []
+            if region_height >= 2*Dungeon.MIN_HEIGHT:
+                """ If you subtract the minimum dungeon height from the top and
+                    bottom of the region, you are left with a sort of bandwidth
+                    regin where the split line can be placed such that each
+                    subregion can hold a region of at least the minimum height such
+                    that a room will be contained within the region and the room
+                    will be surrounded by void. If such a bandwith cannot be
+                    created, then the region cannot be split horizontally.
+                """
+                choices.append("horz")
+            if region_width >= 2*Dungeon.MIN_WIDTH:
+                # Similar logic as checking horiziontal split
+                choices.append("vert")
+            if not choices:
+                room = self.add_rand_room(region_x, region_y,
+                                            region_width, region_height)
+                return set([room])
+            dung_split = random.choice(choices)
+        else:
+            split = True
+            if region_height < 2*Dungeon.MIN_HEIGHT:
+                """ If you subtract the minimum dungeon height from the top and
                 bottom of the region, you are left with a sort of bandwidth
                 regin where the split line can be placed such that each
-                subregion can hold a region of the minimum height such that a
-                room will be contained within the region and the room will be
-                surrounded by void. If such a bandwith cannot be created, then
-                the region cannot be split horizontally.
-            """
-            print("can't split horizontally")
-            split = False
-        if region_width < 2*Dungeon.MIN_WIDTH:
-            # Similar logic as checking horiziontal split
-            print("can't split vertically")
-            split = False
-        if not split:
-            self.add_rand_room(region_x, region_y,
-                                region_width, region_height)
-            return
+                subregion can hold a region of at least the minimum height such
+                that a room will be contained within the region and the room
+                will be surrounded by void. If such a bandwith cannot be
+                created, then the region cannot be split horizontally.
+                """
+                print("can't split horizontally")
+                split = False
+            if region_width < 2*Dungeon.MIN_WIDTH:
+                # Similar logic as checking horiziontal split
+                print("can't split vertically")
+                split = False
+            if not split:
+                room = self.add_rand_room(region_x, region_y,
+                                            region_width, region_height)
+                return set([room])
+            dung_split = random.choice(["vert", "horz"])
 
-        dung_split = random.choice(["horz", "vert"])
+        print(dung_split)
         if dung_split == "horz":
             top_height = random.randint(Dungeon.MIN_HEIGHT,
                             region_height - Dungeon.MIN_HEIGHT)
@@ -427,8 +521,21 @@ class Dungeon(pygame.sprite.Sprite):
                 start = (bottom[0] * TILE_SIZE, bottom[1] * TILE_SIZE)
                 end = ((bottom[0] + region_width) * TILE_SIZE, start[1])
                 pygame.draw.line(self.screen, green, start, end, TILE_SIZE)
-            self.generate_dungeon(*top)
-            self.generate_dungeon(*bottom)
+            top_rooms = set()
+            bottom_rooms = set()
+            top_rooms |= self.generate_dungeon(*top)
+            bottom_rooms |= self.generate_dungeon(*bottom)
+            print("top rooms: ")
+            self.print_rooms(top_rooms)
+            print("bottom rooms: ")
+            self.print_rooms(bottom_rooms)
+            r1 = random.choice(list(top_rooms))
+            print("r1: ", r1)
+            r2 = random.choice(list(bottom_rooms))
+            print("r2: ")
+            if r1 is not None and r2 is not None:
+                self.connect_rooms(r1, r2)
+            rooms.update(top_rooms | bottom_rooms)
         else:
             left_width = random.randint(Dungeon.MIN_WIDTH,
                             region_width - Dungeon.MIN_WIDTH)
@@ -439,5 +546,20 @@ class Dungeon(pygame.sprite.Sprite):
                 start = (right[0] * TILE_SIZE, right[1] * TILE_SIZE)
                 end = (start[0], (right[1] + region_height) * TILE_SIZE)
                 pygame.draw.line(self.screen, green, start, end, TILE_SIZE)
-            self.generate_dungeon(*left)
-            self.generate_dungeon(*right)
+            left_rooms = set()
+            right_rooms = set()
+            left_rooms |= self.generate_dungeon(*left)
+            right_rooms |= self.generate_dungeon(*right)
+            print("left rooms: ")
+            self.print_rooms(left_rooms)
+            print("right rooms: ")
+            self.print_rooms(right_rooms)
+            r1 = random.choice(list(left_rooms))
+            print("r1: ", r1)
+            r2 = random.choice(list(right_rooms))
+            print("r2: ")
+            if r1 is not None and r2 is not None:
+                self.connect_rooms(r1, r2)
+            rooms.update(left_rooms | right_rooms)
+
+        return rooms
