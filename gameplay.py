@@ -121,17 +121,38 @@ class Enemy():
 
     def chase_player(self, player):
         '''
-        Method for enemy to chase player.
+        Method for enemy to attack player.
         Arguments:
             player (class): the player object
         '''
-        dir_x = np.sign(self.rect.x - player.rect.x)
-        dir_y = np.sign(self.rect.y - player.rect.y)
+        # dir_x = np.sign(self.rect.x - player.rect.x)
+        # dir_y = np.sign(self.rect.y - player.rect.y)
+        #
+        # # print(self.rect)
+        # if not self.rect.colliderect(player.rect):
+        #     self.rect.x -= dir_x * self.speed
+        #     self.rect.y -= dir_y * self.speed
 
-        # print(self.rect)
+        playerx = int(math.ceil(player.rect.x/TILE_SIZE))
+        playery = int(math.ceil(player.rect.y/TILE_SIZE))
+        enemyx = int(math.ceil(self.rect.x/TILE_SIZE))
+        enemyy = int(math.ceil(self.rect.y/TILE_SIZE))
+
+        playerloc = (playerx, playery)
+        enemyloc = (enemyx, enemyy)
+
+        print('dijkstra')
+        pathdict = dijkstra(wtgrid, enemyloc, playerloc)
+        print('dijkstra path')
+        path = getpath(pathdict, enemyloc, playerloc)
+        print('moving')
+        currloc = path.pop(0)
+        nextloc = path.pop(0)
+        dir_x = np.sign(nextloc[0] - currloc[0])
+        dir_y = np.sign(nextloc[1] - currloc[1])
         if not self.rect.colliderect(player.rect):
-            self.rect.x -= dir_x * self.speed
-            self.rect.y -= dir_y * self.speed
+            self.rect.x += dir_x * TILE_SIZE
+            self.rect.y += dir_y * TILE_SIZE
 
 
 class Queue():
@@ -328,7 +349,9 @@ def dijkstra(graph, startloc, endloc):
                 tosearch.push(nexttile, priority)
                 visited[nexttile] = currenttile
                 pathcost[nexttile] = newpathcost
-    return visited, pathcost
+    return visited
+    #pathcost is optional parameter to return
+    # return visited, pathcost
 
 
 def getpath(pathdict, startloc, endloc):
@@ -382,7 +405,7 @@ hallway.draw()
 dungeon.add_hallway()
 
 player = Player(30, 30, player_sprite, 10)
-enemy = Enemy(330, 330, enemy1_sprite, 1)
+enemy = Enemy(360, 360, enemy1_sprite, 1)
 allenemies = [enemy]
 
 # tilegraph = TileGraph()
@@ -393,21 +416,21 @@ allenemies = [enemy]
 # tilegrid.getwalls()
 # print(tilegrid.walls)
 
-wtgrid = WeightedTileGrid(30,20)
+wtgrid = WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
 wtgrid.getwalls()
 # print(wtgrid.walls)
-print('bfs')
-pathdict = bfs(wtgrid, (1,1), (12,12))
-print(pathdict)
-print('bfs path')
-print(getpath(pathdict, (1,1), (12,12)))
-print('dijkstra')
-pathdict, pathcost = dijkstra(wtgrid, (1,1), (12,12))
-print(pathdict)
-print('dijkstra path')
-print(getpath(pathdict, (1,1), (12,12)))
+# print('bfs')
+# pathdict = bfs(wtgrid, (1,1), (12,12))
+# print(pathdict)
+# print('bfs path')
+# print(getpath(pathdict, (1,1), (12,12)))
+# print('dijkstra')
+# pathdict, pathcost = dijkstra(wtgrid, (1,1), (12,12))
+# print(pathdict)
+# print('dijkstra path')
+# print(getpath(pathdict, (1,1), (12,12)))
 
-'''
+
 while True:
     dungeon.draw((dungeon.width,), (dungeon.height,))
 
@@ -419,7 +442,7 @@ while True:
             pygame.quit()
             sys.exit()
 
-    # enemy.chase_player(player)
+    enemy.chase_player(player)
     player.collision(allenemies)
 
     # print(dungeon.tile_map)
@@ -436,4 +459,3 @@ while True:
 
     pygame.display.update()
     fpsClock.tick(FPS)
-'''
