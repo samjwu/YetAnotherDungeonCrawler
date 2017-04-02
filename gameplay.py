@@ -1,4 +1,4 @@
-#modules/libraries
+#standard modules/libraries
 import pygame, sys, time
 from pygame.locals import *
 import numpy as np
@@ -7,6 +7,7 @@ import random
 import collections
 import heapq
 
+#imported scripts
 import level
 from level_constants import *
 from gameplay_constants import *
@@ -18,7 +19,7 @@ class Player():
     '''Player class'''
     def __init__(self, x, y, sprite, speed):
         '''
-        Create a player object
+        Create a player object.
         Arguments:
             x (int): horizontal position of player
             y (int): vertical position of player
@@ -31,7 +32,8 @@ class Player():
 
     def move(self, dx, dy, tilelist):
         '''
-        Move player based on keyboard input
+        Move player based on keyboard input.
+        Has collision detection for walls.
         Arguments:
             dx (int): how far to move horiziontally
             dy (int): how far to move vertically
@@ -73,10 +75,10 @@ class Player():
 
     def collision(self, enemy_list):
         '''
-        Move the player away from other objects when it collides with them.
+        Move the player away from enemies when it collides with them.
         Arguments:
-            enemy_list (list): a list that the function will check to see
-            whether the player is colliding with an enemy
+            enemy_list (list): a list of enemy objects that the function
+            will check to see whether the player is colliding with an enemy
         '''
         for enemy in enemy_list:
             # print('checkenemies: ',enemy)
@@ -90,7 +92,7 @@ class Enemy():
     '''Class for enemy objects'''
     def __init__(self, x, y, sprite, speed):
         '''
-        Create an enemy object
+        Create an enemy object.
         Arguments:
             x (int): horizontal position of enemy
             y (int): vertical position of enemy
@@ -98,30 +100,28 @@ class Enemy():
             speed (int): how fast enemy should move
         '''
         self.rect = pygame.Rect(x, y, 30,30)
-        # self.x = x
-        # self.y = y
         self.sprite = sprite
         self.speed = speed
 
     def generateenemy(self, x, y, sprite, speed):
         '''
-        Generate an enemy
+        Generate an enemy with random parameters.
         Arguments:
             x (int): horizontal position of enemy
             y (int): vertical position of enemy
             sprite (image): picture used for enemy
             speed (int): how fast enemy should move
         '''
-        # x =
-        # y =
+        x = random.randint(1, MAP_HEIGHT-1)
+        y = random.randint(1, MAP_WIDTH-1)
         # sprite =
-        # speed =
+        speed = random.randint(1,3)
         newenemy = Enemy(x, y, sprite, speed)
         return newenemy
 
     def chase_player(self, player):
         '''
-        Method for enemy to chase player
+        Method for enemy to chase player.
         Arguments:
             player (class): the player object
         '''
@@ -137,7 +137,7 @@ class Enemy():
 class Queue():
     '''
     Use a deque from collections library as a queue
-    (append elements to back and pop from front)
+    (append elements to back and pop from front).
     '''
     def __init__(self):
         self.elements = collections.deque()
@@ -155,7 +155,7 @@ class Queue():
 class PriorityQueue:
     '''
     Get the binary heap from heapq library and use it as a priority queue
-    (note heap queue is a min heap that uses a list as heap)
+    (note heap queue is a min heap that uses a list as heap).
     '''
     def __init__(self):
         self.elements = []
@@ -172,7 +172,9 @@ class PriorityQueue:
 
 
 class TileGraph():
-    '''Undirected graph of tiles'''
+    '''
+    Undirected graph of tiles.
+    '''
     def __init__(self):
         self.edges = {}
         for col in range(MAP_WIDTH):
@@ -208,7 +210,7 @@ class TileGraph():
 
 class TileGrid():
     '''
-    A grid-based graph class to represent tiles
+    A grid-based graph class to represent tiles.
     Args:
         width (int): map width
         height (int): map height
@@ -265,7 +267,7 @@ class WeightedTileGrid(TileGrid):
 
 def bfs(graph, startloc, endloc):
     '''
-    Breadth first search on the given graph
+    Breadth first search on the given graph.
     Args:
         graph (TileGrid): instance of the undirected graph of tiles
         startloc (tuple): coordinates of start tile
@@ -295,7 +297,7 @@ def bfs(graph, startloc, endloc):
 
 def dijkstra(graph, startloc, endloc):
     '''
-    Search on the given graph with Dijkstra's Algorithm
+    Search on the given graph with Dijkstra's Algorithm.
     Args:
         graph (WeightedTileGrid): instance of the undirected graph of tiles
         startloc (tuple): coordinates of start tile
@@ -327,6 +329,32 @@ def dijkstra(graph, startloc, endloc):
                 visited[nexttile] = currenttile
                 pathcost[nexttile] = newpathcost
     return visited, pathcost
+
+
+def getpath(pathdict, startloc, endloc):
+    '''
+    Get the path from a "path dictionary" returned by bfs or dijkstra.
+    Make the path a list of tiles.
+    Args:
+        pathdict (dict): dictionary of edges that gives
+                        a path from start tile to end tile
+        startloc (tuple): coordinates of start tile
+        endloc (tuple): coordinates of end tile
+    '''
+    #path goes backwards since pathdict has edges from startloc to endloc
+    #since pathdict[nexttile] gives location of previoustile
+    currenttile = endloc
+    path = [currenttile]
+    #when reach startloc, got all tiles in path
+    while currenttile != startloc:
+        currenttile = pathdict[currenttile]
+        path.append(currenttile)
+    # path.append(startloc)
+    #since list is backwards, reverse it
+    path.reverse()
+    return path
+
+
 
 
 pygame.init()
@@ -369,9 +397,15 @@ wtgrid = WeightedTileGrid(30,20)
 wtgrid.getwalls()
 # print(wtgrid.walls)
 print('bfs')
-print(bfs(wtgrid, (1,1), (12,12)))
+pathdict = bfs(wtgrid, (1,1), (12,12))
+print(pathdict)
+print('bfs path')
+print(getpath(pathdict, (1,1), (12,12)))
 print('dijkstra')
-print(dijkstra(wtgrid, (1,1), (12,12)))
+pathdict, pathcost = dijkstra(wtgrid, (1,1), (12,12))
+print(pathdict)
+print('dijkstra path')
+print(getpath(pathdict, (1,1), (12,12)))
 
 '''
 while True:
