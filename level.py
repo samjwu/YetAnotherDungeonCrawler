@@ -95,12 +95,12 @@ class Room(pygame.sprite.Group):
         self.width = width
         self.height = height
 
-        # Generate vertical borders
+        # Generate horizontal borders
         for row in range(y, y + height):
             for col in (x, x + (width - 1)):
                 self.add(Tile(WALL, col, row))
 
-        # Generate horizontal borders
+        # Generate vertical borders
         for row in (y, y + (height - 1)):
             for col in range(x, x + width):
                 self.add(Tile(WALL, col, row))
