@@ -239,7 +239,7 @@ class TileGrid():
         return results
 
 
-def bfs(graph, startloc):
+def bfs(graph, startloc, endloc):
     '''
     Breadth first search on the given graph
     Args:
@@ -254,11 +254,16 @@ def bfs(graph, startloc):
     while not tosearch.isempty():
         currenttile = tosearch.pop()
         # print('currenttile: ',currenttile)
+        #early exit for Best-First Search and A*
+        if currenttile == endloc:
+            break
+
         for nexttile in graph.neighbors(currenttile):
             # print('nexttile: ',nexttile)
             if nexttile not in visited:
                 tosearch.push(nexttile)
                 visited[nexttile] = True
+    return visited
 
 
 pygame.init()
@@ -296,7 +301,8 @@ allenemies = [enemy]
 
 tilegrid = TileGrid(30,20)
 tilegrid.getwalls()
-print(tilegrid.walls)
+# print(tilegrid.walls)
+print(bfs(tilegrid, (1,1)))
 
 '''
 while True:
