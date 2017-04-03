@@ -3,11 +3,15 @@ from pygame.locals import *
 import sys
 import random
 from level_constants import *
+import heapq
 sys.setrecursionlimit(30000)
 
-VISUALIZE = True
+# Use for testing
+VISUALIZE_BFS = True
 ENABLE_GEN = True # Used for testing
-CHECK_SPLIT_FIRST = True
+CHECK_SPLIT_FIRST = False
+VH_CONNECT = False
+GREEDY_CONECT = True
 
 def constrain(n, lower_limit, upper_limit):
     if n < lower_limit:
@@ -51,12 +55,20 @@ class Tile(pygame.sprite.Sprite):
     def get_image(self):
         return self.image
 
-    def __str__(self):
-        return str(self.tile_id)
-
     def draw(self):
         self.screen.blit(self.image, (self.x*TILE_SIZE, self.y*TILE_SIZE))
 
+    def __str__(self):
+        return "Tile: ({}, {}, {})".format(self.tile_id, self.x, self.y)
+
+    def __eq__(self, other):
+        return self.tile_id == other.tile_id \
+            and self.x == other.x and self.y == other.y
+
+    def __hash__(self):
+        # Had to implement this after overriding __eq__ in order to have sets
+        # of tiles
+        return hash((self.tile_id, self.x, self.y))
 
 class Room(pygame.sprite.Group):
     """ Class used to represent a room
@@ -89,33 +101,74 @@ class Room(pygame.sprite.Group):
         # Init
         self.x = x
         self.y = y
-        self.interior = {}
-        self.border = {}
         self.center = ( (x + (width - 1)) // 2 , (y + (height - 1)) // 2 )
         self.width = width
         self.height = height
+        self.interior = {}
+        self.border = {}
+        self.doors = {}
 
         # Generate vertical borders
         for row in range(y, y + height):
             for col in (x, x + (width - 1)):
                 self.add(Tile(WALL, col, row))
-                self.interior[(col, row)] = Tile(FLOOR, col, row)
+                self.border[(col, row)] = Tile(WALL, col, row)
 
         # Generate horizontal borders
         for row in (y, y + (height - 1)):
             for col in range(x, x + width):
                 self.add(Tile(WALL, col, row))
-                self.border[(col, row)] = Tile(FLOOR, col, row)
+                self.border[(col, row)] = Tile(WALL, col, row)
 
         # Generate interior of room
         for row in range(y + 1, (y + height) - 1):
             for col in range(x + 1, (x + width) - 1):
                 self.add(Tile(FLOOR, col, row))
-                self.border[(col, row)] = Tile(FLOOR, col, row)
+                self.interior[(col, row)] = Tile(FLOOR, col, row)
 
     def draw(self):
         for tile in self.sprites():
             tile.draw()
+
+    def add_door(self):
+        """ Selects a border tile to use as a door """
+        corners = {
+            Tile(WALL, self.x, self.y),
+            Tile(WALL, self.x + self.width - 1, self.y),
+            Tile(WALL, self.x + self.width - 1, self.y + self.height - 1),
+            Tile(WALL, self.x, self.y + self.height - 1)}
+
+        while True:
+            choices = set(list(self.border.values())) - corners
+            door = random.choice(list(choices))
+            if door not in self.doors:
+                break
+
+        self.doors[(door.x, door.y)] = door
+        return door
+
+    def pick_outside_door(self, door):
+        """ Picks a point just oustide the door """
+        if (door.x, door.y) not in self.doors:
+            raise ValueError("Door not in room")
+            return None
+
+        if (0 < door.x < self.x + self.width - 1) and door.y == self.y:
+            # Top
+            return (door.x, door.y - 1)
+        elif door.x == self.x + self.width - 1 \
+            and (0 < door.y < self.y + self.height - 1):
+            # Right
+            return (door.x + 1, door.y)
+        elif (0 < door.x < self.x + self.width - 1) \
+            and door.y == self.y + self.height - 1:
+            # Bottom
+            return (door.x, door.y + 1)
+        elif door.x == self.x and (0 < door.y < self.y + self.height - 1):
+            # Left
+            return (door.x - 1, door.y)
+        else:
+            raise Exception("Door not in room")
 
     def __str__(self):
         return "Room: ( {}, {}, {}, {} )".format(self.x, self.y,
@@ -148,7 +201,7 @@ class Room(pygame.sprite.Group):
             or region_height < Dungeon.MIN_HEIGHT:
                 error_str = "Region too small to generate room within: {} {}".\
                     format(region_width, region_height)
-                raise ValueError()
+                raise ValueError(error_str)
 
         # Generate characteristics of the dungeon
         if region_width == Dungeon.MIN_WIDTH:
@@ -176,7 +229,9 @@ class Hallway(pygame.sprite.Sprite):
 
         A hallway is defined to be a path of tiles within a region of
         previously void space such that every tile in the path is connected
-        either horizontally or vertically to it's neighbours.
+        either horizontally or vertically to it's neighbours. The path must
+        contain a start and end point outside of a room and thus the minimum
+        path length is 2.
 
         Every hallway tile must be surrounded by a border if it does not
         intersect with another hallway
@@ -194,10 +249,18 @@ class Hallway(pygame.sprite.Sprite):
                                     the hallway
         """
         if path is None:
-            path = {}
+            self.path = {}
+        elif type(path) == list:
+            # Assume path is a list of tiles, convert to dictionary
+            self.path = {}
+            for tile in path:
+                self.path[(tile.x, tile.y)] = tile
+        elif type(path) == dict:
+            self.path = path
+        else:
+            raise ValueError("Path must be a dictionary")
         self.start = start
         self.end = end
-        self.path = path
         self.border = {}
 
     def get_path(self):
@@ -395,6 +458,116 @@ class Dungeon(pygame.sprite.Sprite):
         for room in rooms:
             print(room)
 
+    @staticmethod
+    def heuristic(node, goal):
+        """ Finds manhattan distance between two points in space
+
+            Arguments:
+                node (tuple):
+                goal (tuple):
+
+            Returns:
+                dx + dy (float): manhattan distance between two points
+
+        """
+        dx = abs(goal[0] - node[0])
+        dy = abs(goal[1] - node[1])
+        dist = dx + dy
+        return dist
+
+    def neighbours(self, tile):
+        """ Finds all adjacent tiles to a given tile """
+        neighbours = []
+        for row in range(max(0, tile.y - 1), min(self.height, tile.y + 1)):
+            for col in range(max(0, tile.x - 1), min(self.width, tile.x + 1)):
+                if row != tile.y and col != tile.x:
+                    # Can't be a neighbour of oneself
+                    neighbours.append(tile_map[row][col])
+        return neighbours
+
+    def ortogonal_neighbours(self, tile):
+        """ Finds all horizontal and vertical tiles adjacent to a given tile"""
+        neighbours = []
+        for y in (max(0, tile.y - 1), min(self.height - 1, tile.y + 1)):
+            neighbours.append(self.tile_map[y][tile.y])
+
+        for x in (max(0, tile.x - 1), min(self.width - 1, tile.x + 1)):
+            neighbours.append(self.tile_map[tile.y][x])
+
+        return neighbours
+
+    def greedy_search(self, start, goal):
+        """ Performs greedy best-first search to find path from start tile to
+            end tile
+
+            Arguments:
+                start (tuple): point from which we start from
+                goal (tuple): point which we want to get to
+
+            Returns:
+                path (list: Tile): list of tiles that form the path
+        """
+        print("start: {}".format(start))
+        print("goal: {}".format(goal))
+        priority_queue = []
+        heapq.heappush(priority_queue,
+                        (self.heuristic(start, goal), start, start))
+        visited = {}
+
+        # Can't have a hallway when start == goal
+        if start == goal:
+            return []
+
+        print("Greedy First search: ")
+        while priority_queue:
+            h, v_from, v_to  = priority_queue.pop()
+            print("{} --> {} || {}".format(v_from, v_to, h))
+            if v_to == goal:
+                visited[v_to] = v_from
+                print("Found goal!")
+                break
+            if v_to in visited:
+                continue
+            visited[v_to] = v_from
+
+            vt_x, vt_y = v_to
+            for v_next in self.ortogonal_neighbours(self.tile_map[vt_y][vt_x]):
+                if v_next.tile_id != WALL \
+                    and (v_next.x, v_next.y) not in visited:
+                    heapq.heappush(priority_queue,
+                        (self.heuristic(v_to, goal),
+                        v_to, (v_next.x, v_next.y))
+                        )
+
+        # No path found
+        if goal not in visited:
+            return []
+
+        # Recreate path
+        path = []
+        node = goal
+        while node != start:
+            path.append(Tile(FLOOR, node[0], node[1]))
+            node = visited[node]
+        path.reverse()
+        print(path)
+        return path
+
+    def greedy_connect(self, r1, r2):
+        r1_door = r1.add_door()
+        print("r1_door: {}".format(r1_door))
+        start = r1.pick_outside_door(r1_door)
+        r2_door = r2.add_door()
+        print("r2_door: {}".format(r2_door))
+        end = r2.pick_outside_door(r2_door)
+
+        path = self.greedy_search(start, end)
+        if path:
+            hallway = Hallway(start, end, path)
+            hallway.draw()
+        else:
+            print("Hallway not possible: no path found")
+
     def connect_rooms(self, r1, r2):
         choices = []
         overlap_y = {y for y in range(r1.y + 1, r1.y + r1.height - 1)} \
@@ -517,7 +690,7 @@ class Dungeon(pygame.sprite.Sprite):
             top = (region_x, region_y, region_width, top_height)
             bottom = (region_x, region_y + top_height,
                         region_width, region_height - top_height)
-            if VISUALIZE:
+            if VISUALIZE_BFS:
                 start = (bottom[0] * TILE_SIZE, bottom[1] * TILE_SIZE)
                 end = ((bottom[0] + region_width) * TILE_SIZE, start[1])
                 pygame.draw.line(self.screen, green, start, end, TILE_SIZE)
@@ -532,9 +705,12 @@ class Dungeon(pygame.sprite.Sprite):
             r1 = random.choice(list(top_rooms))
             print("r1: ", r1)
             r2 = random.choice(list(bottom_rooms))
-            print("r2: ")
+            print("r2: ", r2)
             if r1 is not None and r2 is not None:
-                self.connect_rooms(r1, r2)
+                if VH_CONNECT:
+                    self.connect_rooms(r1, r2)
+                if GREEDY_CONECT:
+                    self.greedy_connect(r1, r2)
             rooms.update(top_rooms | bottom_rooms)
         else:
             left_width = random.randint(Dungeon.MIN_WIDTH,
@@ -542,7 +718,7 @@ class Dungeon(pygame.sprite.Sprite):
             left = (region_x, region_y, left_width, region_height)
             right = (region_x + left_width, region_y,
                         region_width - left_width, region_height)
-            if VISUALIZE:
+            if VISUALIZE_BFS:
                 start = (right[0] * TILE_SIZE, right[1] * TILE_SIZE)
                 end = (start[0], (right[1] + region_height) * TILE_SIZE)
                 pygame.draw.line(self.screen, green, start, end, TILE_SIZE)
@@ -557,9 +733,12 @@ class Dungeon(pygame.sprite.Sprite):
             r1 = random.choice(list(left_rooms))
             print("r1: ", r1)
             r2 = random.choice(list(right_rooms))
-            print("r2: ")
+            print("r2: ", r2)
             if r1 is not None and r2 is not None:
-                self.connect_rooms(r1, r2)
+                if VH_CONNECT:
+                    self.connect_rooms(r1, r2)
+                if GREEDY_CONECT:
+                    self.greedy_connect(r1, r2)
             rooms.update(left_rooms | right_rooms)
 
         return rooms
