@@ -698,8 +698,8 @@ class Dungeon(pygame.sprite.Sprite):
 
             Runtime: O(len(room_list))
         """
-        min_dist = float("inf")
         closest_room = None
+        min_dist = float("inf")
         for room_to in room_list:
             dist = abs(room_to.center[0] - room_from.center[0]) \
                     + abs(room_to.center[1] - room_from.center[1])
@@ -707,6 +707,29 @@ class Dungeon(pygame.sprite.Sprite):
                 min_dist = dist
                 closest_room = room_to
         return room_to
+
+    @staticmethod
+    def closest_room_pair(room_iterable_1, room_iterable_2):
+        """ Find a pair of rooms from two different lists of rooms that are
+            the closest together.
+
+            Arguments:
+                room_iterable_1 (iterable: Room): first iterable of rooms
+                room_iterable_2 (iterable: Room): second iterable of rooms
+
+            Returns:
+                room_pair (tuple: Room): pair of rooms that are closest together
+        """
+        room_pair = None
+        min_dist = float("inf")
+        for room1 in room_iterable_1:
+            for room2 in room_iterable_2:
+                dist = abs(room1.center[0] - room2.center[0]) \
+                        + abs(room1.center[1] - room2.center[1])
+                if dist < min_dist:
+                    min_dist = dist
+                    room_pair = (room1, room2)
+        return room_pair
 
     def generate_dungeon(self, region_x, region_y, region_width, region_height):
         """ Creates dungeon using Binary Space Partitioning
@@ -794,9 +817,10 @@ class Dungeon(pygame.sprite.Sprite):
             self.print_rooms(top_rooms)
             print("bottom rooms: ")
             self.print_rooms(bottom_rooms)
-            r1 = random.choice(list(top_rooms))
+            # r1 = random.choice(list(top_rooms))
+            # r2 = self.closest_room(r1, list(bottom_rooms))
+            r1, r2 = self.closest_room_pair(top_rooms, bottom_rooms)
             print("r1: ", r1)
-            r2 = self.closest_room(r1, list(bottom_rooms))
             # r2 = random.choice(list(bottom_rooms))
             print("r2: ", r2)
             if r1 is not None and r2 is not None:
@@ -821,10 +845,11 @@ class Dungeon(pygame.sprite.Sprite):
             self.print_rooms(left_rooms)
             print("right rooms: ")
             self.print_rooms(right_rooms)
-            r1 = random.choice(list(left_rooms))
-            print("r1: ", r1)
+            # r1 = random.choice(list(left_rooms))
             # r2 = random.choice(list(right_rooms))
-            r2 = self.closest_room(r1, list(right_rooms))
+            r1, r2 = self.closest_room_pair(left_rooms, right_rooms)
+            print("r1: ", r1)
+            # r2 = self.closest_room(r1, list(right_rooms))
             print("r2: ", r2)
             if r1 is not None and r2 is not None:
                 if VH_CONNECT:
