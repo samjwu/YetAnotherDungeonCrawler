@@ -9,7 +9,7 @@ TEST_LSHAPED = True
 
 # initialize dungeon
 dungeon = level.Dungeon()
-if TEST_CONNECT:
+if not level.ENABLE_GEN and TEST_CONNECT:
     room1 = level.Room(0, 10, 9, 9)
     dungeon.rooms.append(room1)
     dungeon.update_tilemap(room1)
@@ -22,7 +22,7 @@ if TEST_CONNECT:
 
     dungeon.connect_rooms(room1, room2)
 
-if TEST_LSHAPED:
+if not level.ENABLE_GEN and TEST_LSHAPED:
     room1 = level.Room(15, 15, 9, 9)
     dungeon.rooms.append(room1)
     dungeon.update_tilemap(room1)

@@ -6,12 +6,17 @@ from level_constants import *
 import heapq
 sys.setrecursionlimit(30000)
 
+# Modifies behaviour of Dungeon Generator
+# Enabling this parameter makes dungeon more populated
+BSP_CHECK_SPLIT_FIRST = True
+
+# Visualization
+VISUALIZE_BSP_SPLIT = True
+VISUALIZE_BSP_CONNECT = True
+
 # Use for testing
-VISUALIZE_BFS = True
-ENABLE_GEN = False
-CHECK_SPLIT_FIRST = True
+ENABLE_GEN = True
 VH_CONNECT = True
-GREEDY_CONECT = False
 
 def constrain(n, lower_limit, upper_limit):
     if n < lower_limit:
@@ -490,78 +495,6 @@ class Dungeon(pygame.sprite.Sprite):
 
         return neighbours
 
-    def greedy_search(self, start, goal):
-        """ Performs greedy best-first search to find path from start tile to
-            end tile
-
-            Arguments:
-                start (tuple): point from which we start from
-                goal (tuple): point which we want to get to
-
-            Returns:
-                path (list: Tile): list of tiles that form the path
-        """
-        print("start: {}".format(start))
-        print("goal: {}".format(goal))
-        priority_queue = []
-        heapq.heappush(priority_queue,
-                        (self.manhattan_dist(start, goal), start, start))
-        visited = {}
-
-        # Can't have a hallway when start == goal
-        if start == goal:
-            return []
-
-        print("Greedy First search: ")
-        while priority_queue:
-            h, v_from, v_to  = priority_queue.pop()
-            print("{} --> {} || {}".format(v_from, v_to, h))
-            if v_to == goal:
-                visited[v_to] = v_from
-                print("Found goal!")
-                break
-            if v_to in visited:
-                continue
-            visited[v_to] = v_from
-
-            vt_x, vt_y = v_to
-            for v_next in self.ortogonal_neighbours(self.tile_map[vt_y][vt_x]):
-                if v_next.tile_id != WALL \
-                    and (v_next.x, v_next.y) not in visited:
-                    heapq.heappush(priority_queue,
-                        (self.manhattan_dist(v_to, goal),
-                        v_to, (v_next.x, v_next.y))
-                        )
-
-        # No path found
-        if goal not in visited:
-            return []
-
-        # Recreate path
-        path = []
-        node = goal
-        while node != start:
-            path.append(Tile(FLOOR, node[0], node[1]))
-            node = visited[node]
-        path.reverse()
-        print(path)
-        return path
-
-    def greedy_connect(self, r1, r2):
-        r1_door = r1.add_door()
-        print("r1_door: {}".format(r1_door))
-        start = r1.pick_outside_door(r1_door)
-        r2_door = r2.add_door()
-        print("r2_door: {}".format(r2_door))
-        end = r2.pick_outside_door(r2_door)
-
-        path = self.greedy_search(start, end)
-        if path:
-            hallway = Hallway(start, end, path)
-            hallway.draw()
-        else:
-            print("Hallway not possible: no path found")
-
     def neighbours(self, curr):
         """ Finds all adjacent tiles to a given position """
         print("Finding neighbours of ", curr)
@@ -579,128 +512,6 @@ class Dungeon(pygame.sprite.Sprite):
                 neighbours.append(self.tile_map[row][col])
         return neighbours
 
-    def prune(self, start, end):
-        pass
-
-    def jump(self, curr, dx, dy, start, goal):
-        """ Finds jump pont from a given tile
-
-            Arguments:
-                curr (Tile): current tile within tilemap
-                start (Tile): starting tile within tilemap
-                dx (int): horizontal distance to neighbour
-                dy (int): vertical distance to neighbour
-                goal (Tile): destination tile within tilemap
-        """
-        print("Jumping from {}!!! dx: {} | dy: {}".format(curr, dx, dy))
-        # Reached edges of the map
-        if curr.x + dx == 0 or curr.x + dx == self.width - 1:
-            print("Hit edge of map...")
-            return None
-        elif curr.y + dy == 0 or curr.y + dy == self.height - 1:
-            print("Edge of map...")
-            return None
-
-        next_tile = self.tile_map[curr.y + dy][curr.x + dx]
-
-        # Check next tile is blocked
-        if next_tile.tile_id == WALL:
-            print("Can't jump from tile...")
-            return None
-
-        # Found goal
-        if next_tile == goal:
-            print("Found goal!!!!")
-            return next_tile
-
-        # Diagonal movement
-        if dx != 0 and dy != 0:
-            # Check for diagonal forced neighbours
-            if self.tile_map[curr.y + dy][curr.x + dx].tile_id != WALL:
-                # Moving up and to the left
-                if self.tile_map[curr.y - 1][curr.x].tile_id == WALL \
-                    or self.tile_map[curr.y][curr.x + 1].tile_id == WALL:
-                    print("Up and to the left")
-                    return next_tile
-
-                # Moving down and to the left
-                if self.tile_map[curr.y + 1][curr.x].tile_id == WALL \
-                    or self.tile_map[curr.y][curr.x + 1].tile_id == WALL:
-                    print("Down and to the left")
-                    return next_tile
-
-                # Moving down and to the right
-                if self.tile_map[curr.y + 1][curr.x].tile_id == WALL \
-                    or self.tile_map[curr.y][curr.x - 1].tile_id == WALL:
-                    print("Down and to the right")
-                    return next_tile
-
-                # Moving up and to the right
-                if self.tile_map[curr.y - 1][curr.x].tile_id == WALL \
-                    or self.tile_map[curr.y][curr.x - 1].tile_id == WALL:
-                    print("Up and to the right")
-                    return next_tile
-
-            # Check for forced neighbours in horizontal and vertical
-            # directions
-            if self.jump(next_tile, dx, 0, start, goal) is not None \
-                and self.jump(next_tile, 0, dy, start, goal) is not None:
-                print("From diagonal, horz and vert movement possible")
-                return next_tile
-        else:
-            # Horizontal movement
-            if dx != 0:
-                # Horzontal forced neighbours check
-                if self.tile_map[curr.y][curr.x + dx].tile_id != WALL:
-                    if self.tile_map[curr.y + 1][curr.x].tile_id == WALL \
-                        or self.tile_map[curr.y - 1][curr.x].tile_id == WALL:
-                        print("Forced neighbours when moving horizontally")
-                        return next_tile
-
-            # Vertical movement
-            if dy != 0:
-                # Vertical forced neighbours check
-                if self.tile_map[curr.y + dy][curr.x].tile_id != WALL:
-                    if self.tile_map[curr.y][curr.x + 1].tile_id == WALL \
-                        or self.tile_map[curr.y][curr.x - 1].tile_id == WALL:
-                        print("Forced neighbours when moving horizontally")
-                        return next_tile
-
-        # Find next jump point if no forced neighbours
-        return self.jump(next_tile, dx, dy, start, goal)
-
-    def identiy_succesors(self, curr, start, goal):
-        """ Uses jump point search to find path between start and goal
-
-            Arguments:
-                curr (Tile): current tile within tilemap
-                start (Tile): starting tile within tilemap
-                goal (Tile):  destination tile within tilemap
-
-            Return:
-                successors (list: Tile): path (?) created by jump point search,
-                    guaranteed to be optimal, see paper for proof
-        """
-        successors = []
-        neighbours = self.neighbours(curr)
-        print("neighbours of {}: {}".format(curr, neighbours))
-        for neighbour in neighbours:
-            # Find direction of jump
-            dx = constrain(neighbour.x - curr.x, -1, 1)
-            dy = constrain(neighbour.y - curr.y, -1, 1)
-            print("dx: {} | dy: {}".format(dx, dy))
-
-            # Find neighbour to jump to
-            jump_point = self.jump(curr, dx, dy, start, goal)
-            print("jump point: ", jump_point)
-            if jump_point is not None:
-                successors.append(jump_point)
-                if jump_point == goal:
-                    print("Goal found!!!")
-                    break
-
-        return successors
-
     def connect_rooms(self, r1, r2):
         print("Connecting {} and {}".format(r1, r2))
         choices = []
@@ -716,47 +527,34 @@ class Dungeon(pygame.sprite.Sprite):
         if not choices:
             print("L-shaped hallway")
             p1 = random.choice(list(r1.interior.values()))
-            p1.set_id(GRASS)
-            p1.draw()
             p2 = random.choice(list(r2.interior.values()))
-            p2.set_id(GRASS)
-            p2.draw()
-            print("Interior points: p1 = {}, p2 {}".format(p1, p2))
+            if VISUALIZE_BSP_CONNECT:
+                p1.set_id(GRASS)
+                p1.draw()
+                p2.set_id(GRASS)
+                p2.draw()
             dx = p2.x - p1.x
             dy = p2.y - p1.y
-            print("dx = {}, dy = {}".format(dx, dy))
             if dx > 0:
                 if dy > 0:
                     print("Case 1", end="")
                     if random.random() > 0.5:
                         # Works
                         print("a")
-                        r1_door = (r1.x + r1.width - 1,  p1.y)
-                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
-                        r1_door_tile.set_id(DOOR)
-                        r1_door_tile.draw()
-                        r2_door = (p2.x, r2.y)
-                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
-                        r2_door_tile.set_id(DOOR)
-                        r2_door_tile.draw()
-                        start = (r1_door[0] + 1, r1_door[1])
-                        end = (r2_door[0], r2_door[1] - 1)
+                        r1_door_pos = (r1.x + r1.width - 1,  p1.y)
+                        r2_door_pos = (p2.x, r2.y)
+                        start = (r1_door_pos[0] + 1, r1_door_pos[1])
+                        end = (r2_door_pos[0], r2_door_pos[1] - 1)
                         hallway = Hallway(start, end)
                         hallway.create_horz_path(start, (end[0], start[1]))
                         hallway.create_vert_path((end[0],start[1]), end)
                     else:
                         # Works
                         print("b")
-                        r1_door = (p1.x, r1.y + r1.height - 1)
-                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
-                        r1_door_tile.set_id(DOOR)
-                        r1_door_tile.draw()
-                        r2_door = (r2.x, p2.y)
-                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
-                        r2_door_tile.set_id(DOOR)
-                        r2_door_tile.draw()
-                        start = (r1_door[0], r1_door[1] + 1)
-                        end = (r2_door[0] - 1, r2_door[1])
+                        r1_door_pos = (p1.x, r1.y + r1.height - 1)
+                        r2_door_pos = (r2.x, p2.y)
+                        start = (r1_door_pos[0], r1_door_pos[1] + 1)
+                        end = (r2_door_pos[0] - 1, r2_door_pos[1])
                         hallway = Hallway(start, end)
                         hallway.create_vert_path(start, (start[0], end[1]))
                         hallway.create_horz_path((start[0], end[1]), end)
@@ -766,16 +564,10 @@ class Dungeon(pygame.sprite.Sprite):
                         # Horzontal then vertical
                         # Works
                         print("a")
-                        r1_door = (r1.x + r1.width - 1, p1.y)
-                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
-                        r1_door_tile.set_id(DOOR)
-                        r1_door_tile.draw()
-                        r2_door = (p2.x, r2.y + r2.height - 1)
-                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
-                        r2_door_tile.set_id(DOOR)
-                        r2_door_tile.draw()
-                        start = (r1_door[0] + 1, r1_door[1])
-                        end = (r2_door[0], r2_door[1] + 1)
+                        r1_door_pos = (r1.x + r1.width - 1, p1.y)
+                        r2_door_pos = (p2.x, r2.y + r2.height - 1)
+                        start = (r1_door_pos[0] + 1, r1_door_pos[1])
+                        end = (r2_door_pos[0], r2_door_pos[1] + 1)
                         hallway = Hallway(start, end)
                         hallway.create_horz_path(start, (end[0], start[1]))
                         hallway.create_vert_path((end[0],start[1]), end)
@@ -783,16 +575,10 @@ class Dungeon(pygame.sprite.Sprite):
                         # Vertical then horizontal
                         # Works
                         print("b")
-                        r1_door = (p1.x, r1.y)
-                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
-                        r1_door_tile.set_id(DOOR)
-                        r1_door_tile.draw()
-                        r2_door = (r2.x, p2.y)
-                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
-                        r2_door_tile.set_id(DOOR)
-                        r2_door_tile.draw()
-                        start = (r1_door[0], r1_door[1] - 1)
-                        end = (r2_door[0] - 1, r2_door[1])
+                        r1_door_pos = (p1.x, r1.y)
+                        r2_door_pos = (r2.x, p2.y)
+                        start = (r1_door_pos[0], r1_door_pos[1] - 1)
+                        end = (r2_door_pos[0] - 1, r2_door_pos[1])
                         hallway = Hallway(start, end)
                         hallway.create_vert_path(start, (start[0], end[1]))
                         hallway.create_horz_path((start[0], end[1]), end)
@@ -803,16 +589,10 @@ class Dungeon(pygame.sprite.Sprite):
                         # Horizontal then vertical
                         # Works
                         print("a")
-                        r1_door = (r1.x,  p1.y)
-                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
-                        r1_door_tile.set_id(DOOR)
-                        r1_door_tile.draw()
-                        r2_door = (p2.x, r2.y)
-                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
-                        r2_door_tile.set_id(DOOR)
-                        r2_door_tile.draw()
-                        start = (r1_door[0] - 1, r1_door[1])
-                        end = (r2_door[0], r2_door[1] - 1)
+                        r1_door_pos = (r1.x,  p1.y)
+                        r2_door_pos = (p2.x, r2.y)
+                        start = (r1_door_pos[0] - 1, r1_door_pos[1])
+                        end = (r2_door_pos[0], r2_door_pos[1] - 1)
                         hallway = Hallway(start, end)
                         hallway.create_horz_path(start, (end[0], start[1]))
                         hallway.create_vert_path((end[0],start[1]), end)
@@ -820,16 +600,10 @@ class Dungeon(pygame.sprite.Sprite):
                         # Vertical then horizontal
                         # Works
                         print("b")
-                        r1_door = (p1.x, r1.y + r1.height - 1)
-                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
-                        r1_door_tile.set_id(DOOR)
-                        r1_door_tile.draw()
-                        r2_door = (r2.x + r2.width - 1, p2.y)
-                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
-                        r2_door_tile.set_id(DOOR)
-                        r2_door_tile.draw()
-                        start = (r1_door[0], r1_door[1] + 1)
-                        end = (r2_door[0] + 1, r2_door[1])
+                        r1_door_pos = (p1.x, r1.y + r1.height - 1)
+                        r2_door_pos = (r2.x + r2.width - 1, p2.y)
+                        start = (r1_door_pos[0], r1_door_pos[1] + 1)
+                        end = (r2_door_pos[0] + 1, r2_door_pos[1])
                         hallway = Hallway(start, end)
                         hallway.create_vert_path(start, (start[0], end[1]))
                         hallway.create_horz_path((start[0], end[1]), end)
@@ -839,16 +613,10 @@ class Dungeon(pygame.sprite.Sprite):
                         print("a")
                         # Horizontal then vertical
                         # Works
-                        r1_door = (r1.x,  p1.y)
-                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
-                        r1_door_tile.set_id(DOOR)
-                        r1_door_tile.draw()
-                        r2_door = (p2.x, r2.y + r2.height - 1)
-                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
-                        r2_door_tile.set_id(DOOR)
-                        r2_door_tile.draw()
-                        start = (r1_door[0] - 1, r1_door[1])
-                        end = (r2_door[0], r2_door[1] + 1)
+                        r1_door_pos = (r1.x,  p1.y)
+                        r2_door_pos = (p2.x, r2.y + r2.height - 1)
+                        start = (r1_door_pos[0] - 1, r1_door_pos[1])
+                        end = (r2_door_pos[0], r2_door_pos[1] + 1)
                         hallway = Hallway(start, end)
                         hallway.create_horz_path(start, (end[0], start[1]))
                         hallway.create_vert_path((end[0], start[1]), end)
@@ -856,19 +624,20 @@ class Dungeon(pygame.sprite.Sprite):
                         print("b")
                         # Vertical then horizontal
                         # Works
-                        r1_door = (p1.x, r1.y)
-                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
-                        r1_door_tile.set_id(DOOR)
-                        r1_door_tile.draw()
-                        r2_door = (r2.x + r2.width - 1, p2.y)
-                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
-                        r2_door_tile.set_id(DOOR)
-                        r2_door_tile.draw()
-                        start = (r1_door[0], r1_door[1] - 1)
-                        end = (r2_door[0] + 1, r2_door[1])
+                        r1_door_pos = (p1.x, r1.y)
+                        r2_door_pos = (r2.x + r2.width - 1, p2.y)
+                        start = (r1_door_pos[0], r1_door_pos[1] - 1)
+                        end = (r2_door_pos[0] + 1, r2_door_pos[1])
                         hallway = Hallway(start, end)
                         hallway.create_vert_path(start, (start[0], end[1]))
                         hallway.create_horz_path((start[0], end[1]), end)
+            if VISUALIZE_BSP_CONNECT:
+                r1_door_tile = self.tile_map[r1_door_pos[1]][r1_door_pos[0]]
+                r1_door_tile.set_id(DOOR)
+                r1_door_tile.draw()
+                r2_door_tile = self.tile_map[r2_door_pos[1]][r2_door_pos[0]]
+                r2_door_tile.set_id(DOOR)
+                r2_door_tile.draw()
             hallway.draw()
         else:
             hallway_dir = random.choice(choices)
@@ -886,7 +655,14 @@ class Dungeon(pygame.sprite.Sprite):
                     start = (r1_door_x - 1, door_y)
                     end = (r2_door_x + 1, door_y)
                 hallway = Hallway(start, end)
-                hallway.create_horz_path(add_border=True)
+                hallway.create_horz_path()
+                if VISUALIZE_BSP_CONNECT:
+                    r1_door_tile = self.tile_map[door_y][r1_door_x]
+                    r1_door_tile.set_id(DOOR)
+                    r1_door_tile.draw()
+                    r2_door_tile = self.tile_map[door_y][r2_door_x]
+                    r2_door_tile.set_id(DOOR)
+                    r2_door_tile.draw()
                 hallway.draw()
             else:
                 print("Vertical Hallway")
@@ -902,9 +678,15 @@ class Dungeon(pygame.sprite.Sprite):
                     start = (door_x, r2_door_y + 1)
                     end = (door_x, r1_door_y - 1)
                 hallway = Hallway(start, end)
-                hallway.create_vert_path(add_border=True)
+                hallway.create_vert_path()
+                if VISUALIZE_BSP_CONNECT:
+                    r1_door_tile = self.tile_map[r1_door_y][door_x]
+                    r1_door_tile.set_id(DOOR)
+                    r1_door_tile.draw()
+                    r2_door_tile = self.tile_map[r2_door_y][door_x]
+                    r2_door_tile.set_id(DOOR)
+                    r2_door_tile.draw()
                 hallway.draw()
-
 
     @staticmethod
     def closest_room(room_from, room_list):
@@ -950,7 +732,7 @@ class Dungeon(pygame.sprite.Sprite):
         print("region: ( {}, {}, {}, {} )".format(region_x, region_y,
                                                 region_width, region_height))
 
-        if CHECK_SPLIT_FIRST:
+        if BSP_CHECK_SPLIT_FIRST:
             choices = []
             if region_height >= 2*Dungeon.MIN_HEIGHT:
                 """ If you subtract the minimum dungeon height from the top and
@@ -1000,7 +782,7 @@ class Dungeon(pygame.sprite.Sprite):
             top = (region_x, region_y, region_width, top_height)
             bottom = (region_x, region_y + top_height,
                         region_width, region_height - top_height)
-            if VISUALIZE_BFS:
+            if VISUALIZE_BSP_SPLIT:
                 start = (bottom[0] * TILE_SIZE, bottom[1] * TILE_SIZE)
                 end = ((bottom[0] + region_width) * TILE_SIZE, start[1])
                 pygame.draw.line(self.screen, green, start, end, TILE_SIZE)
@@ -1020,8 +802,6 @@ class Dungeon(pygame.sprite.Sprite):
             if r1 is not None and r2 is not None:
                 if VH_CONNECT:
                     self.connect_rooms(r1, r2)
-                if GREEDY_CONECT:
-                    self.greedy_connect(r1, r2)
             rooms.update(top_rooms | bottom_rooms)
         else:
             left_width = random.randint(Dungeon.MIN_WIDTH,
@@ -1029,7 +809,7 @@ class Dungeon(pygame.sprite.Sprite):
             left = (region_x, region_y, left_width, region_height)
             right = (region_x + left_width, region_y,
                         region_width - left_width, region_height)
-            if VISUALIZE_BFS:
+            if VISUALIZE_BSP_SPLIT:
                 start = (right[0] * TILE_SIZE, right[1] * TILE_SIZE)
                 end = (start[0], (right[1] + region_height) * TILE_SIZE)
                 pygame.draw.line(self.screen, green, start, end, TILE_SIZE)
@@ -1049,8 +829,6 @@ class Dungeon(pygame.sprite.Sprite):
             if r1 is not None and r2 is not None:
                 if VH_CONNECT:
                     self.connect_rooms(r1, r2)
-                if GREEDY_CONECT:
-                    self.greedy_connect(r1, r2)
             rooms.update(left_rooms | right_rooms)
 
         return rooms
