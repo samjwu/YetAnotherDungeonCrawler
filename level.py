@@ -8,10 +8,10 @@ sys.setrecursionlimit(30000)
 
 # Use for testing
 VISUALIZE_BFS = True
-ENABLE_GEN = True # Used for testing
+ENABLE_GEN = False # Used for testing
 CHECK_SPLIT_FIRST = False
 VH_CONNECT = False
-GREEDY_CONECT = True
+GREEDY_CONECT = False
 
 def constrain(n, lower_limit, upper_limit):
     if n < lower_limit:
@@ -475,16 +475,6 @@ class Dungeon(pygame.sprite.Sprite):
         dist = dx + dy
         return dist
 
-    def neighbours(self, tile):
-        """ Finds all adjacent tiles to a given tile """
-        neighbours = []
-        for row in range(max(0, tile.y - 1), min(self.height, tile.y + 1)):
-            for col in range(max(0, tile.x - 1), min(self.width, tile.x + 1)):
-                if row != tile.y and col != tile.x:
-                    # Can't be a neighbour of oneself
-                    neighbours.append(tile_map[row][col])
-        return neighbours
-
     def ortogonal_neighbours(self, tile):
         """ Finds all horizontal and vertical tiles adjacent to a given tile"""
         neighbours = []
@@ -567,6 +557,147 @@ class Dungeon(pygame.sprite.Sprite):
             hallway.draw()
         else:
             print("Hallway not possible: no path found")
+
+    def neighbours(self, curr):
+        """ Finds all adjacent tiles to a given position """
+        print("Finding neighbours of ", curr)
+        neighbours = []
+        print("Row range: ", end='')
+        print(list(range(max(0, curr.y - 1), min(self.height, curr.y + 2))))
+        print("Col range: ", end='')
+        print(list(range(max(0, curr.x - 1), min(self.width, curr.x + 2))))
+        for row in range(max(0, curr.y - 1), min(self.height, curr.y + 2)):
+            for col in range(max(0, curr.x - 1), min(self.width, curr.x + 2)):
+                print("row: {}| col: {}".format(row, col))
+                if row == curr.y and col == curr.x:
+                    # Can't be a neighbour of oneself
+                    continue
+                # print("adding?")
+                neighbours.append(self.tile_map[row][col])
+                # print(neighbours)
+        return neighbours
+
+    def prune(self, start, end):
+        pass
+
+    def jump(self, curr, dx, dy, start, goal):
+        """ Finds jump pont from a given tile
+
+            Arguments:
+                curr (Tile): current tile within tilemap
+                start (Tile): starting tile within tilemap
+                dx (int): horizontal distance to neighbour
+                dy (int): vertical distance to neighbour
+                goal (Tile): destination tile within tilemap
+        """
+        print("Jumping from {}!!! dx: {} | dy: {}".format(curr, dx, dy))
+        # Reached edges of the map
+        if curr.x + dx == 0 or curr.x + dx == self.width - 1:
+            print("Hit edge of map...")
+            return None
+        elif curr.y + dy == 0 or curr.y + dy == self.height - 1:
+            print("Edge of map...")
+            return None
+
+        next_tile = self.tile_map[curr.y + dy][curr.x + dx]
+
+        # Check next tile is blocked
+        if next_tile.tile_id == WALL:
+            print("Can't jump from tile...")
+            return None
+
+        # Found goal
+        if next_tile == goal:
+            print("Found goal!!!!")
+            return next_tile
+
+        # Diagonal movement
+        if dx != 0 and dy != 0:
+            # Check for diagonal forced neighbours
+            if self.tile_map[curr.y + dy][curr.x + dx].tile_id != WALL:
+                # Moving up and to the left
+                if self.tile_map[curr.y - 1][curr.x].tile_id == WALL \
+                    or self.tile_map[curr.y][curr.x + 1].tile_id == WALL:
+                    print("Up and to the left")
+                    return next_tile
+
+                # Moving down and to the left
+                if self.tile_map[curr.y + 1][curr.x].tile_id == WALL \
+                    or self.tile_map[curr.y][curr.x + 1].tile_id == WALL:
+                    print("Down and to the left")
+                    return next_tile
+
+                # Moving down and to the right
+                if self.tile_map[curr.y + 1][curr.x].tile_id == WALL \
+                    or self.tile_map[curr.y][curr.x - 1].tile_id == WALL:
+                    print("Down and to the right")
+                    return next_tile
+
+                # Moving up and to the right
+                if self.tile_map[curr.y - 1][curr.x].tile_id == WALL \
+                    or self.tile_map[curr.y][curr.x - 1].tile_id == WALL:
+                    print("Up and to the right")
+                    return next_tile
+
+            # Check for forced neighbours in horizontal and vertical
+            # directions
+            if self.jump(next_tile, dx, 0, start, goal) is not None \
+                and self.jump(next_tile, 0, dy, start, goal) is not None:
+                print("From diagonal, horz and vert movement possible")
+                return next_tile
+        else:
+            # Horizontal movement
+            if dx != 0:
+                # Horzontal forced neighbours check
+                if self.tile_map[curr.y][curr.x + dx].tile_id != WALL:
+                    if self.tile_map[curr.y + 1][curr.x].tile_id == WALL \
+                        or self.tile_map[curr.y - 1][curr.x].tile_id == WALL:
+                        print("Forced neighbours when moving horizontally")
+                        return next_tile
+
+            # Vertical movement
+            if dy != 0:
+                # Vertical forced neighbours check
+                if self.tile_map[curr.y + dy][curr.x].tile_id != WALL:
+                    if self.tile_map[curr.y][curr.x + 1].tile_id == WALL \
+                        or self.tile_map[curr.y][curr.x - 1].tile_id == WALL:
+                        print("Forced neighbours when moving horizontally")
+                        return next_tile
+
+        # Find next jump point if no forced neighbours
+        return self.jump(next_tile, dx, dy, start, goal)
+
+    def identiy_succesors(self, curr, start, goal):
+        """ Uses jump point search to find path between start and goal
+
+            Arguments:
+                curr (Tile): current tile within tilemap
+                start (Tile): starting tile within tilemap
+                goal (Tile):  destination tile within tilemap
+
+            Return:
+                successors (list: Tile): path (?) created by jump point search,
+                    guaranteed to be optimal, see paper for proof
+        """
+        successors = []
+        neighbours = self.neighbours(curr)
+        print("neighbours of {}: {}".format(curr, neighbours))
+        for neighbour in neighbours:
+            # Find direction of jump
+            dx = constrain(neighbour.x - curr.x, -1, 1)
+            dy = constrain(neighbour.y - curr.y, -1, 1)
+            print("dx: {} | dy: {}".format(dx, dy))
+
+            # Find neighbour to jump to
+            jump_point = self.jump(curr, dx, dy, start, goal)
+            print("jump point: ", jump_point)
+            if jump_point is not None:
+                successors.append(jump_point)
+                if jump_point == goal:
+                    print("Goal found!!!")
+                    break
+
+        return successors
 
     def connect_rooms(self, r1, r2):
         choices = []

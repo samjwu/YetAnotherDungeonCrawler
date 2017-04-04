@@ -5,11 +5,12 @@ import level
 from level_constants import *
 
 TEST_CONNECT = False
+TEST_JPS = True
 
 # initialize dungeon
 dungeon = level.Dungeon()
 
-if not level.ENABLE_GEN and not TEST_CONNECT:
+if not level.ENABLE_GEN and not TEST_CONNECT and not TEST_JPS:
     room1 = level.Room(0,0,6,6)
     dungeon.rooms.append(room1)
     dungeon.update_tilemap(room1)
@@ -22,7 +23,7 @@ if not level.ENABLE_GEN and not TEST_CONNECT:
 
     dungeon.add_hallway()
 
-elif not level.ENABLE_GEN and TEST_CONNECT:
+elif not level.ENABLE_GEN and TEST_CONNECT and not TEST_JPS:
     room1 = level.Room(0, 10, 9, 9)
     dungeon.rooms.append(room1)
     dungeon.update_tilemap(room1)
@@ -34,6 +35,11 @@ elif not level.ENABLE_GEN and TEST_CONNECT:
     room2.draw()
 
     dungeon.connect_rooms(room1, room2)
+elif TEST_JPS:
+    start = dungeon.tile_map[5][5]
+    end = dungeon.tile_map[5][12]
+    successors = dungeon.identiy_succesors(start, start, end)
+    print(successors)
 
 
 print("done")
