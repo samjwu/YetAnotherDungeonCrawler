@@ -8,9 +8,9 @@ sys.setrecursionlimit(30000)
 
 # Use for testing
 VISUALIZE_BFS = True
-ENABLE_GEN = False # Used for testing
-CHECK_SPLIT_FIRST = False
-VH_CONNECT = False
+ENABLE_GEN = False
+CHECK_SPLIT_FIRST = True
+VH_CONNECT = True
 GREEDY_CONECT = False
 
 def constrain(n, lower_limit, upper_limit):
@@ -51,6 +51,10 @@ class Tile(pygame.sprite.Sprite):
 
     def get_id(self):
         return self.tile_id
+
+    def set_id(self, new_id):
+        self.tile_id = new_id
+        self.image = tile_images.get(self.tile_id)
 
     def get_image(self):
         return self.image
@@ -275,7 +279,7 @@ class Hallway(pygame.sprite.Sprite):
     def get_border_list(self):
         return list(self.border.values())
 
-    def create_horz_path(self, start=None, end=None, add_border=True):
+    def create_horz_path(self, start=None, end=None, add_border=False):
         if start is None and end is None:
             start = self.start
             end = self.end
@@ -292,7 +296,7 @@ class Hallway(pygame.sprite.Sprite):
                 elif add_border:
                     self.border[(x,y)] = Tile(WALL, x, y)
 
-    def create_vert_path(self, start=None, end=None, add_border=True):
+    def create_vert_path(self, start=None, end=None, add_border=False):
         if start is None and end is None:
             start = self.start
             end = self.end
@@ -309,7 +313,7 @@ class Hallway(pygame.sprite.Sprite):
                 elif add_border:
                     self.border[(x, y)] = Tile(WALL, x, y)
 
-    def create_corner(self, start, end, add_border=True):
+    def create_corner(self, start, end, add_border=False):
         # Create small section of floor tiles in corner
         corner_path = {(end[0], start[1]),}
         if start[0] < end[0]:
@@ -334,7 +338,7 @@ class Hallway(pygame.sprite.Sprite):
                 elif add_border:
                     self.border[(x,y)] = Tile(WALL, x, y)
 
-    def create_lshaped_path(self, start=None, end=None, add_border=True):
+    def create_lshaped_path(self, start=None, end=None, add_border=False):
         if start is None and end is None:
             start = self.start
             end = self.end
@@ -459,7 +463,7 @@ class Dungeon(pygame.sprite.Sprite):
             print(room)
 
     @staticmethod
-    def heuristic(node, goal):
+    def manhattan_dist(node, goal):
         """ Finds manhattan distance between two points in space
 
             Arguments:
@@ -501,7 +505,7 @@ class Dungeon(pygame.sprite.Sprite):
         print("goal: {}".format(goal))
         priority_queue = []
         heapq.heappush(priority_queue,
-                        (self.heuristic(start, goal), start, start))
+                        (self.manhattan_dist(start, goal), start, start))
         visited = {}
 
         # Can't have a hallway when start == goal
@@ -525,7 +529,7 @@ class Dungeon(pygame.sprite.Sprite):
                 if v_next.tile_id != WALL \
                     and (v_next.x, v_next.y) not in visited:
                     heapq.heappush(priority_queue,
-                        (self.heuristic(v_to, goal),
+                        (self.manhattan_dist(v_to, goal),
                         v_to, (v_next.x, v_next.y))
                         )
 
@@ -572,9 +576,7 @@ class Dungeon(pygame.sprite.Sprite):
                 if row == curr.y and col == curr.x:
                     # Can't be a neighbour of oneself
                     continue
-                # print("adding?")
                 neighbours.append(self.tile_map[row][col])
-                # print(neighbours)
         return neighbours
 
     def prune(self, start, end):
@@ -700,6 +702,7 @@ class Dungeon(pygame.sprite.Sprite):
         return successors
 
     def connect_rooms(self, r1, r2):
+        print("Connecting {} and {}".format(r1, r2))
         choices = []
         overlap_y = {y for y in range(r1.y + 1, r1.y + r1.height - 1)} \
                         & {y for y in range(r2.y + 1, r2.y + r2.height - 1)}
@@ -711,41 +714,217 @@ class Dungeon(pygame.sprite.Sprite):
             choices.append("vert")
 
         if not choices:
-            print("Must try zig-zag instead")
-            return
-
-        hallway_dir = random.choice(choices)
-        if hallway_dir == "horz":
-            # start = (random.choice())
-            door_y = random.choice(list(overlap_y))
-            if r1.x < r2.x:
-                r1_door_x = r1.x + r1.width - 1
-                r2_door_x = r2.x
-                start = (r1_door_x + 1, door_y)
-                end = (r2_door_x - 1, door_y)
+            print("L-shaped hallway")
+            p1 = random.choice(list(r1.interior.values()))
+            p1.set_id(GRASS)
+            p1.draw()
+            p2 = random.choice(list(r2.interior.values()))
+            p2.set_id(GRASS)
+            p2.draw()
+            print("Interior points: p1 = {}, p2 {}".format(p1, p2))
+            dx = p2.x - p1.x
+            dy = p2.y - p1.y
+            print("dx = {}, dy = {}".format(dx, dy))
+            if dx > 0:
+                if dy > 0:
+                    print("Case 1", end="")
+                    if random.random() > 0.5:
+                        # Works
+                        print("a")
+                        r1_door = (r1.x + r1.width - 1,  p1.y)
+                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
+                        r1_door_tile.set_id(DOOR)
+                        r1_door_tile.draw()
+                        r2_door = (p2.x, r2.y)
+                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
+                        r2_door_tile.set_id(DOOR)
+                        r2_door_tile.draw()
+                        start = (r1_door[0] + 1, r1_door[1])
+                        end = (r2_door[0], r2_door[1] - 1)
+                        hallway = Hallway(start, end)
+                        hallway.create_horz_path(start, (end[0], start[1]))
+                        hallway.create_vert_path((end[0],start[1]), end)
+                    else:
+                        # Works
+                        print("b")
+                        r1_door = (p1.x, r1.y + r1.height - 1)
+                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
+                        r1_door_tile.set_id(DOOR)
+                        r1_door_tile.draw()
+                        r2_door = (r2.x, p2.y)
+                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
+                        r2_door_tile.set_id(DOOR)
+                        r2_door_tile.draw()
+                        start = (r1_door[0], r1_door[1] + 1)
+                        end = (r2_door[0] - 1, r2_door[1])
+                        hallway = Hallway(start, end)
+                        hallway.create_vert_path(start, (start[0], end[1]))
+                        hallway.create_horz_path((start[0], end[1]), end)
+                else:
+                    print("Case 2", end="")
+                    if random.random() > 1.0:
+                        # Horzontal then vertical
+                        # Works
+                        print("a")
+                        r1_door = (r1.x + r1.width - 1, p1.y)
+                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
+                        r1_door_tile.set_id(DOOR)
+                        r1_door_tile.draw()
+                        r2_door = (p2.x, r2.y + r2.height - 1)
+                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
+                        r2_door_tile.set_id(DOOR)
+                        r2_door_tile.draw()
+                        start = (r1_door[0] + 1, r1_door[1])
+                        end = (r2_door[0], r2_door[1] + 1)
+                        hallway = Hallway(start, end)
+                        hallway.create_horz_path(start, (end[0], start[1]))
+                        hallway.create_vert_path((end[0],start[1]), end)
+                    else:
+                        # Vertical then horizontal
+                        # Works
+                        print("b")
+                        r1_door = (p1.x, r1.y)
+                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
+                        r1_door_tile.set_id(DOOR)
+                        r1_door_tile.draw()
+                        r2_door = (r2.x, p2.y)
+                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
+                        r2_door_tile.set_id(DOOR)
+                        r2_door_tile.draw()
+                        start = (r1_door[0], r1_door[1] - 1)
+                        end = (r2_door[0] - 1, r2_door[1])
+                        hallway = Hallway(start, end)
+                        hallway.create_vert_path(start, (start[0], end[1]))
+                        hallway.create_horz_path((start[0], end[1]), end)
             else:
-                r1_door_x = r1.x
-                r2_door_x = r2.x + r2.width - 1
-                start = (r1_door_x - 1, door_y)
-                end = (r2_door_x + 1, door_y)
-            hallway = Hallway(start, end)
-            hallway.create_horz_path()
+                if dy > 0:
+                    print("Case 3", end="")
+                    if random.random() > 1.0:
+                        # Horizontal then vertical
+                        # Works
+                        print("a")
+                        r1_door = (r1.x,  p1.y)
+                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
+                        r1_door_tile.set_id(DOOR)
+                        r1_door_tile.draw()
+                        r2_door = (p2.x, r2.y)
+                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
+                        r2_door_tile.set_id(DOOR)
+                        r2_door_tile.draw()
+                        start = (r1_door[0] - 1, r1_door[1])
+                        end = (r2_door[0], r2_door[1] - 1)
+                        hallway = Hallway(start, end)
+                        hallway.create_horz_path(start, (end[0], start[1]))
+                        hallway.create_vert_path((end[0],start[1]), end)
+                    else:
+                        # Vertical then horizontal
+                        # Works
+                        print("b")
+                        r1_door = (p1.x, r1.y + r1.height - 1)
+                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
+                        r1_door_tile.set_id(DOOR)
+                        r1_door_tile.draw()
+                        r2_door = (r2.x + r2.width - 1, p2.y)
+                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
+                        r2_door_tile.set_id(DOOR)
+                        r2_door_tile.draw()
+                        start = (r1_door[0], r1_door[1] + 1)
+                        end = (r2_door[0] + 1, r2_door[1])
+                        hallway = Hallway(start, end)
+                        hallway.create_vert_path(start, (start[0], end[1]))
+                        hallway.create_horz_path((start[0], end[1]), end)
+                else:
+                    print("Case 4", end="")
+                    if random.random() > 1.0:
+                        print("a")
+                        # Horizontal then vertical
+                        # Works
+                        r1_door = (r1.x,  p1.y)
+                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
+                        r1_door_tile.set_id(DOOR)
+                        r1_door_tile.draw()
+                        r2_door = (p2.x, r2.y + r2.height - 1)
+                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
+                        r2_door_tile.set_id(DOOR)
+                        r2_door_tile.draw()
+                        start = (r1_door[0] - 1, r1_door[1])
+                        end = (r2_door[0], r2_door[1] + 1)
+                        hallway = Hallway(start, end)
+                        hallway.create_horz_path(start, (end[0], start[1]))
+                        hallway.create_vert_path((end[0], start[1]), end)
+                    else:
+                        print("b")
+                        # Vertical then horizontal
+                        # Works
+                        r1_door = (p1.x, r1.y)
+                        r1_door_tile = self.tile_map[r1_door[1]][r1_door[0]]
+                        r1_door_tile.set_id(DOOR)
+                        r1_door_tile.draw()
+                        r2_door = (r2.x + r2.width - 1, p2.y)
+                        r2_door_tile = self.tile_map[r2_door[1]][r2_door[0]]
+                        r2_door_tile.set_id(DOOR)
+                        r2_door_tile.draw()
+                        start = (r1_door[0], r1_door[1] - 1)
+                        end = (r2_door[0] + 1, r2_door[1])
+                        hallway = Hallway(start, end)
+                        hallway.create_vert_path(start, (start[0], end[1]))
+                        hallway.create_horz_path((start[0], end[1]), end)
             hallway.draw()
         else:
-            door_x = random.choice(list(overlap_x))
-            if r1.y < r2.y:
-                r1_door_y = r1.y + r1.height - 1
-                r2_door_y = r2.y
-                start = (door_x, r1_door_y + 1)
-                end = (door_x, r2_door_y - 1)
+            hallway_dir = random.choice(choices)
+            if hallway_dir == "horz":
+                print("Horzontal Hallway")
+                door_y = random.choice(list(overlap_y))
+                if r1.x < r2.x:
+                    r1_door_x = r1.x + r1.width - 1
+                    r2_door_x = r2.x
+                    start = (r1_door_x + 1, door_y)
+                    end = (r2_door_x - 1, door_y)
+                else:
+                    r1_door_x = r1.x
+                    r2_door_x = r2.x + r2.width - 1
+                    start = (r1_door_x - 1, door_y)
+                    end = (r2_door_x + 1, door_y)
+                hallway = Hallway(start, end)
+                hallway.create_horz_path(add_border=True)
+                hallway.draw()
             else:
-                r1_door_y = r1.y
-                r2_door_y = r2.y + r2.height - 1
-                start = (door_x, r2_door_y + 1)
-                end = (door_x, r1_door_y - 1)
-            hallway = Hallway(start, end)
-            hallway.create_vert_path()
-            hallway.draw()
+                print("Vertical Hallway")
+                door_x = random.choice(list(overlap_x))
+                if r1.y < r2.y:
+                    r1_door_y = r1.y + r1.height - 1
+                    r2_door_y = r2.y
+                    start = (door_x, r1_door_y + 1)
+                    end = (door_x, r2_door_y - 1)
+                else:
+                    r1_door_y = r1.y
+                    r2_door_y = r2.y + r2.height - 1
+                    start = (door_x, r2_door_y + 1)
+                    end = (door_x, r1_door_y - 1)
+                hallway = Hallway(start, end)
+                hallway.create_vert_path(add_border=True)
+                hallway.draw()
+
+
+    @staticmethod
+    def closest_room(room_from, room_list):
+        """ Finds closest room within a list of rooms from a given starting room
+
+            Arguments:
+                room_from (Room): start room_from
+                room_list (list: Room): sequence of rooms to search
+
+            Runtime: O(len(room_list))
+        """
+        min_dist = float("inf")
+        closest_room = None
+        for room_to in room_list:
+            dist = abs(room_to.center[0] - room_from.center[0]) \
+                    + abs(room_to.center[1] - room_from.center[1])
+            if dist < min_dist:
+                min_dist = dist
+                closest_room = room_to
+        return room_to
 
     def generate_dungeon(self, region_x, region_y, region_width, region_height):
         """ Creates dungeon using Binary Space Partitioning
@@ -835,7 +1014,8 @@ class Dungeon(pygame.sprite.Sprite):
             self.print_rooms(bottom_rooms)
             r1 = random.choice(list(top_rooms))
             print("r1: ", r1)
-            r2 = random.choice(list(bottom_rooms))
+            r2 = self.closest_room(r1, list(bottom_rooms))
+            # r2 = random.choice(list(bottom_rooms))
             print("r2: ", r2)
             if r1 is not None and r2 is not None:
                 if VH_CONNECT:
@@ -863,7 +1043,8 @@ class Dungeon(pygame.sprite.Sprite):
             self.print_rooms(right_rooms)
             r1 = random.choice(list(left_rooms))
             print("r1: ", r1)
-            r2 = random.choice(list(right_rooms))
+            # r2 = random.choice(list(right_rooms))
+            r2 = self.closest_room(r1, list(right_rooms))
             print("r2: ", r2)
             if r1 is not None and r2 is not None:
                 if VH_CONNECT:
