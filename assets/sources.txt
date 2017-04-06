@@ -6,6 +6,8 @@ Grass:
 http://media.moddb.com/images/groups/1/4/3338/grass2_hsvnoise.jpg
 Wall:
 https://s-media-cache-ak0.pinimg.com/736x/07/33/16/073316b9983e580eaa8746f1857c8bd9.jp
+Door:
+http://spiralgraphics.biz/packs/door_medieval/index.htm?0#anchor
 
 Calvin:
 http://now.unfolded.ch/tag/technology/

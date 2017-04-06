@@ -415,7 +415,7 @@ end = (13, 10)
 hallway = level.Hallway(start, end)
 dungeon.hallways.append(hallway)
 hallway.create_lshaped_path(start, end)
-dungeon.update_tilemap(hallway.get_path() + hallway.get_border())
+dungeon.update_tilemap(hallway.get_path_list() + hallway.get_border_list())
 hallway.draw()
 
 dungeon.add_hallway()
