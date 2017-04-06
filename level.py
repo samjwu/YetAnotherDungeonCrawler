@@ -42,8 +42,11 @@ class Tile(pygame.sprite.Sprite):
         self.y = y
         self.image = tile_images.get(self.tile_id)
         self.screen = pygame.display.get_surface()
+        #for collisions
         if tile_id == WALL:
-            self.rect = pygame.Rect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE) #for collisions
+            self.rect = \
+            pygame.Rect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE)
+        #no collision
         else:
             self.rect = pygame.Rect(x*TILE_SIZE, y*TILE_SIZE, 0, 0)
 

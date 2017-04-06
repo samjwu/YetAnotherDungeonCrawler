@@ -55,37 +55,36 @@ class Player():
         row = int(math.ceil(self.rect.y/TILE_SIZE))
         col = int(math.ceil(self.rect.x/TILE_SIZE))
         tile = tilelist[row][col]
-        print('tile: ',tile.rect)
-        print(tile)
+        # print('tile: ',tile.rect)
+        # print(tile)
 
         if self.rect.colliderect(tile.rect):
             print('collision')
             if dx > 0:
-                print('collision')
+                # print('collision')
                 self.rect.right = tile.rect.left
             if dx < 0:
                 self.rect.left = tile.rect.right
-                print('collision')
+                # print('collision')
             if dy > 0:
                 self.rect.top = tile.rect.bottom
-                print('collision')
+                # print('collision')
             if dy < 0:
                 self.rect.bottom = tile.rect.top
-                print('collision')
+                # print('collision')
 
     def collision(self, enemy_list):
         '''
-        Move the player away from enemies when it collides with them.
+        End game when player collides with enemy.
         Arguments:
             enemy_list (list): a list of enemy objects that the function
             will check to see whether the player is colliding with an enemy
         '''
         for enemy in enemy_list:
-            # print('checkenemies: ',enemy)
             if self.rect.colliderect(enemy.rect):
-                # print('collision')
-                self.rect.right = enemy.rect.left
-                self.rect.bottom = enemy.rect.top
+                print('GAME OVER')
+                pygame.quit()
+                sys.exit()
 
 
 class Enemy():
@@ -102,6 +101,7 @@ class Enemy():
         self.rect = pygame.Rect(x, y, 30,30)
         self.sprite = sprite
         self.speed = speed
+        self.ai = random.randint(0,AI-1)
 
     def generateenemy(self, x, y, sprite, speed):
         '''
@@ -114,7 +114,7 @@ class Enemy():
         '''
         x = random.randint(1, MAP_HEIGHT-1)
         y = random.randint(1, MAP_WIDTH-1)
-        # sprite =
+        sprite = spritedict[random.randint(0,numsprites-1)]
         speed = random.randint(1,3)
         newenemy = Enemy(x, y, sprite, speed)
         return newenemy
@@ -125,14 +125,6 @@ class Enemy():
         Arguments:
             player (class): the player object
         '''
-        # dir_x = np.sign(self.rect.x - player.rect.x)
-        # dir_y = np.sign(self.rect.y - player.rect.y)
-        #
-        # # print(self.rect)
-        # if not self.rect.colliderect(player.rect):
-        #     self.rect.x -= dir_x * self.speed
-        #     self.rect.y -= dir_y * self.speed
-
         playerx = int(math.ceil(player.rect.x/TILE_SIZE))
         playery = int(math.ceil(player.rect.y/TILE_SIZE))
         enemyx = int(math.ceil(self.rect.x/TILE_SIZE))
@@ -141,18 +133,23 @@ class Enemy():
         playerloc = (playerx, playery)
         enemyloc = (enemyx, enemyy)
 
-        print('dijkstra')
-        pathdict = dijkstra(wtgrid, enemyloc, playerloc)
-        print('dijkstra path')
+        if self.ai == 0:
+            print('breadthfirstsearch')
+            pathdict = breadthfirstsearch(wtgrid, enemyloc, playerloc)
+        elif self.ai == 1:
+            print('dijkstra')
+            pathdict = dijkstra(wtgrid, enemyloc, playerloc)
+        print('path')
         path = getpath(pathdict, enemyloc, playerloc)
-        print('moving')
-        currloc = path.pop(0)
-        nextloc = path.pop(0)
-        dir_x = np.sign(nextloc[0] - currloc[0])
-        dir_y = np.sign(nextloc[1] - currloc[1])
-        if not self.rect.colliderect(player.rect):
-            self.rect.x += dir_x * TILE_SIZE
-            self.rect.y += dir_y * TILE_SIZE
+        if len(path) > 2:
+            print('moving')
+            currloc = path.pop(0)
+            nextloc = path.pop(0)
+            dir_x = np.sign(nextloc[0] - currloc[0])
+            dir_y = np.sign(nextloc[1] - currloc[1])
+            if not self.rect.colliderect(player.rect):
+                self.rect.x += dir_x * self.speed
+                self.rect.y += dir_y * self.speed
 
 
 class Queue():
@@ -286,7 +283,7 @@ class WeightedTileGrid(TileGrid):
         return self.weights.pop(end, 1)
 
 
-def bfs(graph, startloc, endloc):
+def breadthfirstsearch(graph, startloc, endloc):
     '''
     Breadth first search on the given graph.
     Time Complexity:
@@ -295,6 +292,8 @@ def bfs(graph, startloc, endloc):
         graph (TileGrid): instance of the undirected graph of tiles
         startloc (tuple): coordinates of start tile
         endloc (tuple): coordinates of end tile
+    Returns:
+        visited (dict): dictionary with keys as destination and values as previous tile
     '''
     #note push/pop for deques take O(1) time
     tosearch = Queue()
@@ -313,7 +312,6 @@ def bfs(graph, startloc, endloc):
 
         #neighbors takes O(|V|) since visits all vertices
         for nexttile in graph.neighbors(currenttile):
-            # print('nexttile: ',nexttile)
             #edge additions take O(2|E|) since undirected graph
             #handshake lemma
             if nexttile not in visited:
@@ -331,6 +329,8 @@ def dijkstra(graph, startloc, endloc):
         graph (WeightedTileGrid): instance of the undirected graph of tiles
         startloc (tuple): coordinates of start tile
         endloc (tuple): coordinates of end tile
+    Returns:
+        visited (dict): dictionary with keys as destination and values as previous tile
     '''
     #note push/pop take O(logn) time for binary heap
     #since binary heaps have logn height
@@ -368,18 +368,22 @@ def dijkstra(graph, startloc, endloc):
 
 def getpath(pathdict, startloc, endloc):
     '''
-    Get the path from a "path dictionary" returned by bfs or dijkstra.
-    Make the path a list of tiles.
+    Get the path from a "path dictionary"
+    returned by breadthfirstsearch or dijkstra.
+    Make the path a list of tiles from start to end.
     Args:
         pathdict (dict): dictionary of edges that gives
                         a path from start tile to end tile
         startloc (tuple): coordinates of start tile
         endloc (tuple): coordinates of end tile
+    Returns:
+        path (list): list of tiles from start to end
     '''
     #path goes backwards since pathdict has edges from startloc to endloc
     #since pathdict[nexttile] gives location of previoustile
     currenttile = endloc
-    path = [currenttile]
+    path = [currenttile] #includes the endlocation/full path
+    # path = [] #will not include end tile
     #when reach startloc, got all tiles in path
     while currenttile != startloc:
         currenttile = pathdict[currenttile]
@@ -396,7 +400,7 @@ pygame.init()
 
 dungeon = level.Dungeon()
 
-room1 = level.Room(0,0,6,6)
+room1 = level.Room(0,0,20,20)
 dungeon.rooms.append(room1)
 dungeon.update_tilemap(room1)
 room1.draw()
