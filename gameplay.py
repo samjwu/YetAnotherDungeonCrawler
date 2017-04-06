@@ -119,11 +119,13 @@ class Enemy():
         newenemy = Enemy(x, y, sprite, speed)
         return newenemy
 
-    def chase_player(self, player):
+    def chase_player(self, player, graph):
         '''
-        Method for enemy to attack player.
+        Method for enemy to move towards player.
         Arguments:
             player (class): the player object
+            graph (class): an instance of one of the grid-based classes
+                            used in the search algorithms
         '''
         playerx = int(math.ceil(player.rect.x/TILE_SIZE))
         playery = int(math.ceil(player.rect.y/TILE_SIZE))
@@ -135,10 +137,10 @@ class Enemy():
 
         if self.ai == 0:
             print('breadthfirstsearch')
-            pathdict = breadthfirstsearch(wtgrid, enemyloc, playerloc)
+            pathdict = breadthfirstsearch(graph, enemyloc, playerloc)
         elif self.ai == 1:
             print('dijkstra')
-            pathdict = dijkstra(wtgrid, enemyloc, playerloc)
+            pathdict = dijkstra(graph, enemyloc, playerloc)
         print('path')
         path = getpath(pathdict, enemyloc, playerloc)
         if len(path) > 2:
@@ -156,6 +158,8 @@ class Queue():
     '''
     Use a deque from collections library as a queue
     (append elements to back and pop from front).
+    The breadthfirstsearch function uses this data structure
+    to store its vertices to search.
     '''
     def __init__(self):
         self.elements = collections.deque()
@@ -174,6 +178,8 @@ class PriorityQueue:
     '''
     Get the binary heap from heapq library and use it as a priority queue
     (note heap queue is a min heap that uses a list as heap).
+    The dijkstra function uses this data structure
+    to store its vertices to search.
     '''
     def __init__(self):
         self.elements = []
@@ -202,7 +208,7 @@ class TileGraph():
     def getdungeonedges(self):
         '''
         Method to fill TileGraph instance with undirected edges of a Dungeon
-        instance
+        instance.
         '''
         for col in range(MAP_WIDTH-1):
             for row in range(MAP_HEIGHT-1):
@@ -229,6 +235,7 @@ class TileGraph():
 class TileGrid():
     '''
     A grid-based graph class to represent tiles.
+    Useful for breadthfirstsearch.
     Args:
         width (int): map width
         height (int): map height
@@ -239,6 +246,10 @@ class TileGrid():
         self.walls = []
 
     def getwalls(self):
+        '''
+        Method to get the locations of the walls and put them into a list
+        used for wall collision detection.
+        '''
         for col in range(MAP_WIDTH):
             for row in range(MAP_HEIGHT):
                 currtile = dungeon.tile_map[row][col]
@@ -267,6 +278,8 @@ class WeightedTileGrid(TileGrid):
     A weighted grid-based graph class inherited from the TileGrid class.
     This derived class has all the methods of the base class (TileGrid) and
     needs to have the same arguments as TileGrid.
+    Used for searches that have priorities or heuristics such as dijkstra,
+    but can also be used in breadthfirstsearch.
     Note super is useful for dependency injection
     (eg: for changing base class and less verbosity/explicit references)
     and multiple inheritance (not used here).
@@ -280,6 +293,9 @@ class WeightedTileGrid(TileGrid):
 
     def cost(self, start, end):
         #heuristic:give each node a weight of 1
+        #note that giving a weight of 1 makes it a breadthfirstsearch
+        #use higher weights for tiles to avoid
+        #and lower weights for desirable tiles
         return self.weights.pop(end, 1)
 
 
@@ -424,16 +440,21 @@ player = Player(player_x, player_y, player_sprite, player_speed)
 enemy1 = Enemy(enemy1_x, enemy1_y, enemy1_sprite, enemy1_speed)
 allenemies = [enemy1]
 
+#TESTS
 # tilegraph = TileGraph()
 # tilegraph.getdungeonedges()
 # print(tilegraph.edges)
 
+#TESTS
 # tilegrid = TileGrid(30,20)
 # tilegrid.getwalls()
 # print(tilegrid.walls)
 
-wtgrid = WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
-wtgrid.getwalls()
+#Important
+# wtgrid = WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
+# wtgrid.getwalls()
+
+#TESTS
 # print(wtgrid.walls)
 # print('bfs')
 # pathdict = bfs(wtgrid, (1,1), (12,12))
@@ -447,31 +468,31 @@ wtgrid.getwalls()
 # print(getpath(pathdict, (1,1), (12,12)))
 
 
-while True:
-    dungeon.draw((dungeon.width,), (dungeon.height,))
-
-    level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
-    level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy1.rect.x, enemy1.rect.y))
-
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-
-    enemy1.chase_player(player)
-    player.collision(allenemies)
-
-    # print(dungeon.tile_map)
-
-    keys_pressed = pygame.key.get_pressed()
-    if keys_pressed[K_LEFT]:
-        player.move(-1,0,dungeon.tile_map)
-    if keys_pressed[K_RIGHT]:
-        player.move(1,0,dungeon.tile_map)
-    if keys_pressed[K_UP]:
-        player.move(0,1,dungeon.tile_map)
-    if keys_pressed[K_DOWN]:
-        player.move(0,-1,dungeon.tile_map)
-
-    pygame.display.update()
-    fpsClock.tick(FPS)
+# while True:
+#     dungeon.draw((dungeon.width,), (dungeon.height,))
+#
+#     level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
+#     level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy1.rect.x, enemy1.rect.y))
+#
+#     for event in pygame.event.get():
+#         if event.type == QUIT:
+#             pygame.quit()
+#             sys.exit()
+#
+#     enemy1.chase_player(player)
+#     player.collision(allenemies)
+#
+#     # print(dungeon.tile_map)
+#
+#     keys_pressed = pygame.key.get_pressed()
+#     if keys_pressed[K_LEFT]:
+#         player.move(-1,0,dungeon.tile_map)
+#     if keys_pressed[K_RIGHT]:
+#         player.move(1,0,dungeon.tile_map)
+#     if keys_pressed[K_UP]:
+#         player.move(0,1,dungeon.tile_map)
+#     if keys_pressed[K_DOWN]:
+#         player.move(0,-1,dungeon.tile_map)
+#
+#     pygame.display.update()
+#     fpsClock.tick(FPS)
