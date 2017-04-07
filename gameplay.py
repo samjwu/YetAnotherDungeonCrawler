@@ -54,7 +54,8 @@ class Player():
 
         row = int(math.ceil(self.rect.y/TILE_SIZE))
         col = int(math.ceil(self.rect.x/TILE_SIZE))
-        tile = tilelist[row][col]
+        # tile = tilelist[row][col]
+        tile = tilelist[(col, row)]
         # print('tile: ',tile.rect)
         # print(tile)
 
@@ -212,9 +213,12 @@ class TileGraph():
         '''
         for col in range(MAP_WIDTH-1):
             for row in range(MAP_HEIGHT-1):
-                currtile = dungeon.tile_map[row][col]
-                righttile = dungeon.tile_map[row+1][col]
-                downtile = dungeon.tile_map[row][col+1]
+                # currtile = dungeon.tile_map[row][col]
+                # righttile = dungeon.tile_map[row+1][col]
+                # downtile = dungeon.tile_map[row][col+1]
+                currtile = dungeon.tile_map[(col, row)]
+                righttile = dungeon.tile_map[(col + 1, row)]
+                downtile = dungeon.tile_map[(col, row + 1)]
                 if currtile.tile_id != WALL:
                     #??? row, col ??? todo
                     if righttile.tile_id != WALL:
@@ -255,7 +259,8 @@ class TileGrid():
         '''
         for col in range(MAP_WIDTH):
             for row in range(MAP_HEIGHT):
-                currtile = dungeon.tile_map[row][col]
+                # currtile = dungeon.tile_map[row][col]
+                currtile = dungeon.tile_map[(col, row)]
                 # print(currtile)
                 if currtile.tile_id == WALL:
                     self.walls.append((col,row))
@@ -442,22 +447,22 @@ def getpath(pathdict, startloc, endloc):
 # player = Player(player_x, player_y, player_sprite, player_speed)
 # enemy1 = Enemy(enemy1_x, enemy1_y, enemy1_sprite, enemy1_speed)
 # allenemies = [enemy1]
-
-#TESTS
+#
+# # TESTS
 # tilegraph = TileGraph()
 # tilegraph.getdungeonedges()
 # print(tilegraph.edges)
-
-#TESTS
+#
+# # TESTS
 # tilegrid = TileGrid(30,20)
-# tilegrid.getwalls()
+# tilegrid.getwalls(dungeon)
 # print(tilegrid.walls)
-
-#Important
+#
+# # Important
 # wtgrid = WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
-# wtgrid.getwalls()
-
-#TESTS
+# wtgrid.getwalls(dungeon)
+#
+# # TESTS
 # print(wtgrid.walls)
 # print('bfs')
 # pathdict = bfs(wtgrid, (1,1), (12,12))
@@ -469,8 +474,8 @@ def getpath(pathdict, startloc, endloc):
 # print(pathdict)
 # print('dijkstra path')
 # print(getpath(pathdict, (1,1), (12,12)))
-
-
+#
+#
 # while True:
 #     dungeon.draw((dungeon.width,), (dungeon.height,))
 #

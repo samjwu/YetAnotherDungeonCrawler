@@ -36,17 +36,18 @@ if not level.ENABLE_GEN and TEST_CONNECT:
     dungeon.connect_rooms(room1, room2)
 
 if not level.ENABLE_GEN and TEST_LSHAPED:
-    room1 = level.Room(15, 15, 9, 9)
+    room1 = level.Room(0, 0, 4, 4)
     dungeon.rooms.append(room1)
     dungeon.update_tilemap(room1)
     room1.draw()
 
-    room2 = level.Room(0, 0, 6, 6)
+    room2 = level.Room(10, 10, 6, 6)
     dungeon.rooms.append(room2)
     dungeon.update_tilemap(room2)
     room2.draw()
 
     dungeon.connect_rooms(room1, room2)
+    dungeon.create_all_hallway_borders()
 
 print("done")
 # Print to screen
