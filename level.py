@@ -29,10 +29,10 @@ def constrain(n, lower_limit, upper_limit):
 class Tile(pygame.sprite.Sprite):
     """ A class used to represent a tile
 
-        A tile is defined as a square in space with position (x, y) consiting
-        of a tile id which denotes its type (ex. grass, floor). Each tile also
-        has an associated image (obtained from the tile id) and surface which it
-        is to be displayed upon.
+        A tile is a square in space with position (x, y) consisting
+        of an id which denotes its type (ex. grass, floor).
+        Each tile also has an image (based on tile id) and surface which it
+        is displayed on.
 
     """
     def __init__(self, tile_id, x, y):
@@ -93,13 +93,12 @@ class Tile(pygame.sprite.Sprite):
 class Room(pygame.sprite.Group):
     """ Class used to represent a room
 
-        A room is defined as a collection of tiles consisting of an interior
-        with positive area surrounded by walls. Therefore, the absolute minimum
-        room width and height is 3. This leads to an area of 9 with 1 tile for
-        the interior and 8 for the border. However, the minimum room dimensions
-        can be raised to increase playability of the game as the absolute
-        minimum dimensions are not really playable. Also, the maximum room
-        dimensions can be set for no other reason than playability.
+        A room is a collection of interior tiles surrounded by walls.
+        Therefore, the absolute minimum room width and height is 3.
+        However, the minimum room dimensions can be raised
+        to increase playability of the game.
+        Also, the maximum room dimensions can be set
+        for no other reason than playability.
 
         A room is located in space based upon the (x, y) position of its
         top-left tile.
@@ -208,9 +207,8 @@ class Room(pygame.sprite.Group):
     def generate_room(cls, region_x, region_y, region_width, region_height):
         """ Generate room enclosed within a specified region
 
-            Simply creates a room within a specified region (aka dungeon as
-            defiend in the dungeon class). Does not check if room collides with
-            exisiting rooms.
+            Creates a room within a specified region (aka dungeon class).
+            Does not check if room collides with existing rooms.
 
             Arguments:
                 region_x (int): x position of topleft corner of enclosing region
@@ -251,9 +249,8 @@ class Room(pygame.sprite.Group):
 class Hallway(pygame.sprite.Sprite):
     """ Class used to create and interact with a hallway
 
-        A hallway is defined to be a path of tiles within a region of
-        previously void space such that every tile in the path is connected
-        either horizontally or vertically to it's neighbours. The path must
+        A hallway is a path of tiles where every tile in the path is connected
+        either horizontally or vertically to its neighbours. The path must
         contain a start and end point outside of a room and thus the minimum
         path length is 2.
 
@@ -390,19 +387,19 @@ class Hallway(pygame.sprite.Sprite):
     MIN_HEIGHT_ZZ = 3
 
 class Dungeon(pygame.sprite.Sprite):
-    """ Represents the dungeon
-
-        A dungeon is defined as a region in space consisting of a single room
-        surrounded by a void. Since the absolute minimum room width and height
-        is defined to be 3, in order for a dungeon to be surrounded by void, the
-        absolute minimum dungeon width and height must be 5. However, the
-        actual minimum dimensions of the dungeon may be higher since they
-        depend on the actual minimum dimension of the room. Note that rooms can
-        only be placed within the interior of the dungeon.
+    """
+        A dungeon is a region consisting of a single room surrounded by a void.
+        Since the minimum room width and height is 3,
+        for a dungeon to be surrounded by void,
+        the minimum dungeon width and height must be 5.
+        However, the actual dimensions of the dungeon may be higher since they
+        depend on the actual dimensions of the room.
+        Note that rooms can only be placed within the dungeon.
 
         Each dungeon has an associated width, height, and surface to draw the
-        dungeon upon. In addition, the dungeon stores the tiles at every
-        position within a tilemap. Lastly, a list of rooms is also stored.
+        dungeon upon.
+        The dungeon stores the tiles at every position within a tilemap.
+        A list of rooms is also stored.
     """
     ENABLE_GEN = False # Used for testing
     def __init__(self, height=MAP_HEIGHT, width=MAP_WIDTH, tile_size=TILE_SIZE):
@@ -752,16 +749,17 @@ class Dungeon(pygame.sprite.Sprite):
 
             Binary Space Partitioning as applied to game map generation will
             recursively divide the dungeon along a random dimension (left,
-            right) each function call. Once the sub regions cannot be split
-            anymore, a room will be generated within the region. Since the room
-            within the region is surrounded by void space due to the way a
-            region is defined, no two rooms in the overall dungeon will
-            collide. Note that the regions are built in a top-down fashion.
-            However, to connection of the subregions must be done in a
-            bottom-up fashion. Each region in the dungeon must be connected to
-            its sister. Once all the regions have been connected, there is
-            guaranteed to be a path from every room to every other room and
-            thus the dungeon is complete.
+            right) each function call.
+            Once the sub regions cannot be split anymore,
+            a room will be generated within the region.
+            Since the room within the region is surrounded by void space
+            due to the way it is defined,
+            no two rooms in the dungeon will collide.
+            Regions are built in a top-down fashion.
+            However, connection of rooms are done in a bottom-up fashion.
+            Each region in the dungeon must be connected to its sister.
+            Once all the regions have been connected, there is
+            guaranteed to be a path to every room the dungeon is complete.
 
         """
         rooms = set()
@@ -776,9 +774,8 @@ class Dungeon(pygame.sprite.Sprite):
             if region_height >= 2*Dungeon.MIN_HEIGHT:
                 """ If you subtract the minimum dungeon height from the top and
                     bottom of the region, you are left with a sort of bandwidth
-                    regin where the split line can be placed such that each
-                    subregion can hold a region of at least the minimum height such
-                    that a room will be contained within the region and the room
+                    regin where the split line can be placed such that
+                    a room will be contained within the region and
                     will be surrounded by void. If such a bandwith cannot be
                     created, then the region cannot be split horizontally.
                 """
@@ -796,9 +793,8 @@ class Dungeon(pygame.sprite.Sprite):
             if region_height < 2*Dungeon.MIN_HEIGHT:
                 """ If you subtract the minimum dungeon height from the top and
                 bottom of the region, you are left with a sort of bandwidth
-                regin where the split line can be placed such that each
-                subregion can hold a region of at least the minimum height such
-                that a room will be contained within the region and the room
+                regin where the split line can be placed such
+                that a room will be contained within the region and
                 will be surrounded by void. If such a bandwith cannot be
                 created, then the region cannot be split horizontally.
                 """

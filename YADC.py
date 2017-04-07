@@ -18,8 +18,8 @@ player = gameplay.Player(player_x, player_y, player_sprite, player_speed)
 enemy1 = gameplay.Enemy(enemy1_x, enemy1_y, enemy1_sprite, enemy1_speed)
 allenemies = [enemy1]
 
-wtgrid = gameplay.WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
-wtgrid.getwalls()
+weightedgrid = gameplay.WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
+weightedgrid.getwalls(dungeon)
 
 while True:
     dungeon.draw((dungeon.width,), (dungeon.height,))
@@ -32,10 +32,8 @@ while True:
             pygame.quit()
             sys.exit()
 
-    enemy1.chase_player(player, wtgrid)
+    enemy1.chase_player(player, weightedgrid)
     player.collision(allenemies)
-
-    # print(dungeon.tile_map)
 
     keys_pressed = pygame.key.get_pressed()
     if keys_pressed[K_LEFT]:

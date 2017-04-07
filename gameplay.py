@@ -245,10 +245,13 @@ class TileGrid():
         self.height = height
         self.walls = []
 
-    def getwalls(self):
+    def getwalls(self, dungeon):
         '''
         Method to get the locations of the walls and put them into a list
         used for wall collision detection.
+        Args:
+            dungeon (class): an instance of the Dungeon class
+                            used to get all the walls
         '''
         for col in range(MAP_WIDTH):
             for row in range(MAP_HEIGHT):
@@ -280,7 +283,7 @@ class WeightedTileGrid(TileGrid):
     needs to have the same arguments as TileGrid.
     Used for searches that have priorities or heuristics such as dijkstra,
     but can also be used in breadthfirstsearch.
-    Note super is useful for dependency injection
+    Note super is useful for dependency injection.
     (eg: for changing base class and less verbosity/explicit references)
     and multiple inheritance (not used here).
     Args:
@@ -412,33 +415,33 @@ def getpath(pathdict, startloc, endloc):
 
 
 
-pygame.init()
-
-dungeon = level.Dungeon()
-
-room1 = level.Room(0,0,20,20)
-dungeon.rooms.append(room1)
-dungeon.update_tilemap(room1)
-room1.draw()
-
-room2 = level.Room(10,10,6,6)
-dungeon.rooms.append(room2)
-dungeon.update_tilemap(room2)
-room2.draw()
-
-start = (5, 3)
-end = (13, 10)
-hallway = level.Hallway(start, end)
-dungeon.hallways.append(hallway)
-hallway.create_lshaped_path(start, end)
-dungeon.update_tilemap(hallway.get_path_list() + hallway.get_border_list())
-hallway.draw()
-
-dungeon.add_hallway()
-
-player = Player(player_x, player_y, player_sprite, player_speed)
-enemy1 = Enemy(enemy1_x, enemy1_y, enemy1_sprite, enemy1_speed)
-allenemies = [enemy1]
+# pygame.init()
+#
+# dungeon = level.Dungeon()
+#
+# room1 = level.Room(0,0,20,20)
+# dungeon.rooms.append(room1)
+# dungeon.update_tilemap(room1)
+# room1.draw()
+#
+# room2 = level.Room(10,10,6,6)
+# dungeon.rooms.append(room2)
+# dungeon.update_tilemap(room2)
+# room2.draw()
+#
+# start = (5, 3)
+# end = (13, 10)
+# hallway = level.Hallway(start, end)
+# dungeon.hallways.append(hallway)
+# hallway.create_lshaped_path(start, end)
+# dungeon.update_tilemap(hallway.get_path_list() + hallway.get_border_list())
+# hallway.draw()
+#
+# dungeon.add_hallway()
+#
+# player = Player(player_x, player_y, player_sprite, player_speed)
+# enemy1 = Enemy(enemy1_x, enemy1_y, enemy1_sprite, enemy1_speed)
+# allenemies = [enemy1]
 
 #TESTS
 # tilegraph = TileGraph()
