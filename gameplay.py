@@ -26,7 +26,7 @@ class Player():
             sprite (image): picture used for player
             speed (int): how fast player should move
         '''
-        self.rect = pygame.Rect(x, y, 30,30)
+        self.rect = pygame.Rect(x, y, 10,10)
         self.sprite = sprite
         self.speed = speed
 
@@ -56,23 +56,23 @@ class Player():
         col = int(math.ceil(self.rect.x/TILE_SIZE))
         # tile = tilelist[row][col]
         tile = tilelist[(col, row)]
-        # print('tile: ',tile.rect)
-        # print(tile)
+        print('tile: ',tile.rect)
+        print(tile)
 
         if self.rect.colliderect(tile.rect):
             print('collision')
             if dx > 0:
-                # print('collision')
+                print('collision1')
                 self.rect.right = tile.rect.left
             if dx < 0:
                 self.rect.left = tile.rect.right
-                # print('collision')
+                print('collision2')
             if dy > 0:
                 self.rect.top = tile.rect.bottom
-                # print('collision')
+                print('collision3')
             if dy < 0:
                 self.rect.bottom = tile.rect.top
-                # print('collision')
+                print('collision4')
 
     def collision(self, enemy_list):
         '''
@@ -403,11 +403,12 @@ def getpath(pathdict, startloc, endloc):
     Returns:
         path (list): list of tiles from start to end
     '''
+    print(pathdict)
     #path goes backwards since pathdict has edges from startloc to endloc
     #since pathdict[nexttile] gives location of previoustile
     currenttile = endloc
-    path = [currenttile] #includes the endlocation/full path
-    # path = [] #will not include end tile
+    # path = [currenttile] #includes the endlocation/full path
+    path = [] #will not include end tile
     #when reach startloc, got all tiles in path
     while currenttile != startloc:
         currenttile = pathdict[currenttile]

@@ -11,8 +11,8 @@ sys.setrecursionlimit(30000)
 BSP_CHECK_SPLIT_FIRST = True
 
 # Visualization
-VISUALIZE_BSP_SPLIT = True
-VISUALIZE_BSP_CONNECT = True
+VISUALIZE_BSP_SPLIT = False
+VISUALIZE_BSP_CONNECT = False
 
 # Use for testing
 ENABLE_GEN = True
@@ -445,6 +445,13 @@ class Dungeon(pygame.sprite.Sprite):
         room.draw()
         return room
 
+    def pick_random_room(self):
+        return random.choice(list(self.rooms))
+
+    def filter_rooms(self, *rooms):
+        rooms = set(rooms)
+        return [r for r in self.rooms if r not in rooms]
+
     def add_hallway(self):
         start = (5, 3)
         end = (13, 10)
@@ -622,15 +629,12 @@ class Dungeon(pygame.sprite.Sprite):
                         hallway = Hallway(start, end)
                         hallway.create_vert_path(start, (start[0], end[1]))
                         hallway.create_horz_path((start[0], end[1]), end)
-            if VISUALIZE_BSP_CONNECT:
-                # r1_door_tile = self.tile_map[r1_door_pos[1]][r1_door_pos[0]]
-                r1_door_tile = self.tile_map[r1_door_pos]
-                r1_door_tile.set_id(DOOR)
-                r1_door_tile.draw()
-                # r2_door_tile = self.tile_map[r2_door_pos[1]][r2_door_pos[0]]
-                r2_door_tile = self.tile_map[r2_door_pos]
-                r2_door_tile.set_id(DOOR)
-                r2_door_tile.draw()
+            # r1_door_tile = self.tile_map[r1_door_pos[1]][r1_door_pos[0]]
+            self.tile_map[r1_door_pos].set_id(DOOR)
+            self.tile_map[r1_door_pos].draw()
+            # r2_door_tile = self.tile_map[r2_door_pos[1]][r2_door_pos[0]]
+            self.tile_map[r2_door_pos].set_id(DOOR)
+            self.tile_map[r2_door_pos].draw()
             hallway.draw()
         else:
             hallway_dir = random.choice(choices)
@@ -649,15 +653,12 @@ class Dungeon(pygame.sprite.Sprite):
                     end = (r2_door_x + 1, door_y)
                 hallway = Hallway(start, end)
                 hallway.create_horz_path()
-                if VISUALIZE_BSP_CONNECT:
-                    # r1_door_tile = self.tile_map[door_y][r1_door_x]
-                    r1_door_tile = self.tile_map[(r1_door_x, door_y)]
-                    r1_door_tile.set_id(DOOR)
-                    r1_door_tile.draw()
-                    # r2_door_tile = self.tile_map[door_y][r2_door_x]
-                    r2_door_tile = self.tile_map[(r2_door_x, door_y)]
-                    r2_door_tile.set_id(DOOR)
-                    r2_door_tile.draw()
+                # r1_door_tile = self.tile_map[door_y][r1_door_x]
+                self.tile_map[(r1_door_x, door_y)].set_id(DOOR)
+                self.tile_map[(r1_door_x, door_y)].draw()
+                # r2_door_tile = self.tile_map[door_y][r2_door_x]
+                self.tile_map[(r2_door_x, door_y)].set_id(DOOR)
+                self.tile_map[(r2_door_x, door_y)].draw()
                 hallway.draw()
             else:
                 print("Vertical Hallway")
@@ -674,15 +675,12 @@ class Dungeon(pygame.sprite.Sprite):
                     end = (door_x, r1_door_y - 1)
                 hallway = Hallway(start, end)
                 hallway.create_vert_path()
-                if VISUALIZE_BSP_CONNECT:
-                    # r1_door_tile = self.tile_map[r1_door_y][door_x]
-                    r1_door_tile = self.tile_map[(door_x, r1_door_y)]
-                    r1_door_tile.set_id(DOOR)
-                    r1_door_tile.draw()
-                    # r2_door_tile = self.tile_map[r2_door_y][door_x]
-                    r2_door_tile = self.tile_map[(door_x, r2_door_y)]
-                    r2_door_tile.set_id(DOOR)
-                    r2_door_tile.draw()
+                # r1_door_tile = self.tile_map[r1_door_y][door_x]
+                self.tile_map[(door_x, r1_door_y)].set_id(DOOR)
+                self.tile_map[(door_x, r1_door_y)].draw()
+                # r2_door_tile = self.tile_map[r2_door_y][door_x]
+                self.tile_map[(door_x, r2_door_y)].set_id(DOOR)
+                self.tile_map[(door_x, r2_door_y)].draw()
                 hallway.draw()
         print(hallway)
         self.hallways.append(hallway)
