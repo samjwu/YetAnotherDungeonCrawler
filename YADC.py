@@ -27,8 +27,8 @@ enemy_spawn_point = tuple([c*TILE_SIZE for c in enemy_spawn_point])
 print("enemy room: ", enemy_room)
 print("enemy spawn point: ", enemy_spawn_point)
 
-player = gameplay.Player(*player_spawn_point, player_sprite, player_speed)
-enemy1 = gameplay.Enemy(*enemy_spawn_point, enemy1_sprite, enemy1_speed)
+player = gameplay.Player(player_spawn_point[0], player_spawn_point[1], player_sprite, player_speed)
+enemy1 = gameplay.Enemy(enemy_spawn_point[0], enemy_spawn_point[1], enemy1_sprite, enemy1_speed)
 allenemies = [enemy1]
 
 weightedgrid = gameplay.WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
@@ -37,8 +37,13 @@ weightedgrid.getwalls(dungeon)
 while True:
     dungeon.draw((dungeon.width,), (dungeon.height,))
 
-    level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
-    level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy1.rect.x, enemy1.rect.y))
+    player.draw()
+    for enemy in allenemies:
+        enemy.draw()
+
+    # level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
+    # level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy1.rect.x, enemy1.rect.y))
+    gameplay.checkhp(allenemies)
 
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -46,7 +51,6 @@ while True:
             sys.exit()
 
     enemy1.chase_player(player, weightedgrid)
-    # player.collision(allenemies)
 
     keys_pressed = pygame.key.get_pressed()
     if keys_pressed[K_LEFT]:
@@ -57,6 +61,8 @@ while True:
         player.move(0,1,dungeon.tile_map)
     if keys_pressed[K_DOWN]:
         player.move(0,-1,dungeon.tile_map)
+    if keys_pressed[K_SPACE]:
+        player.attack(allenemies)
 
     pygame.display.update()
     fpsClock.tick(FPS)

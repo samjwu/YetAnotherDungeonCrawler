@@ -12,6 +12,10 @@ import level
 from level_constants import *
 from gameplay_constants import *
 
+#constants for print statements
+DEBUG_PLAYER = True
+DEBUG_ENEMY = True
+DEBUG_PATH = False
 
 
 
@@ -26,9 +30,12 @@ class Player():
             sprite (image): picture used for player
             speed (int): how fast player should move
         '''
-        self.rect = pygame.Rect(x, y, 10,10)
+        self.rect = pygame.Rect(x, y, 0,0)
         self.sprite = sprite
         self.speed = speed
+
+    def draw(self):
+        level.DISPLAY_SURFACE.blit(self.sprite, (self.rect.x, self.rect.y))
 
     def move(self, dx, dy, tilelist):
         '''
@@ -50,29 +57,32 @@ class Player():
             self.rect.x += dx * self.speed
             self.rect.y -= dy * self.speed
 
-        print('player: ',self.rect)
+        if DEBUG_PLAYER:
+            print('player: ',self.rect)
 
         row = int(math.ceil(self.rect.y/TILE_SIZE))
         col = int(math.ceil(self.rect.x/TILE_SIZE))
         # tile = tilelist[row][col]
         tile = tilelist[(col, row)]
-        print('tile: ',tile.rect)
-        print(tile)
+        if DEBUG_PLAYER:
+            print('tile: ',tile.rect)
+            print(tile)
 
-        if self.rect.colliderect(tile.rect):
-            print('collision')
+        if tile.tile_id == WALL:
+            if DEBUG_PLAYER:
+                print('collision')
             if dx > 0:
-                print('collision1')
-                self.rect.right = tile.rect.left
+                # print('collision')
+                self.rect.x = tile.rect.x - TILE_SIZE
             if dx < 0:
-                self.rect.left = tile.rect.right
-                print('collision2')
+                self.rect.x = tile.rect.x + TILE_SIZE
+                # print('collision')
             if dy > 0:
-                self.rect.top = tile.rect.bottom
-                print('collision3')
+                self.rect.y = tile.rect.y + TILE_SIZE
+                # print('collision')
             if dy < 0:
-                self.rect.bottom = tile.rect.top
-                print('collision4')
+                self.rect.y = tile.rect.y - TILE_SIZE
+                # print('collision')
 
     def collision(self, enemy_list):
         '''
@@ -82,10 +92,24 @@ class Player():
             will check to see whether the player is colliding with an enemy
         '''
         for enemy in enemy_list:
-            if self.rect.colliderect(enemy.rect):
+            # if self.rect.colliderect(enemy.rect):
+            if player.rect == enemy.rect:
                 print('GAME OVER')
                 pygame.quit()
                 sys.exit()
+
+    def attack(self, enemy_list):
+        '''
+        Player attacks enemy with spacebar.
+        '''
+        for enemy in enemy_list:
+            if enemy.rect.x > self.rect.x - TILE_SIZE \
+            and enemy.rect.x < self.rect.x + TILE_SIZE \
+            and enemy.rect.y > self.rect.y - TILE_SIZE \
+            and enemy.rect.y < self.rect.y + TILE_SIZE:
+                enemy.hp -= 10
+                if DEBUG_ENEMY:
+                    print('enemy hp: ', enemy.hp)
 
 
 class Enemy():
@@ -99,10 +123,14 @@ class Enemy():
             sprite (image): picture used for enemy
             speed (int): how fast enemy should move
         '''
-        self.rect = pygame.Rect(x, y, 30,30)
+        self.rect = pygame.Rect(x, y, 0,0)
         self.sprite = sprite
         self.speed = speed
+        self.hp = 100
         self.ai = random.randint(0,AI-1)
+
+    def draw(self):
+        level.DISPLAY_SURFACE.blit(self.sprite, (self.rect.x, self.rect.y))
 
     def generateenemy(self, x, y, sprite, speed):
         '''
@@ -137,15 +165,19 @@ class Enemy():
         enemyloc = (enemyx, enemyy)
 
         if self.ai == 0:
-            print('breadthfirstsearch')
+            if DEBUG_PATH:
+                print('breadthfirstsearch')
             pathdict = breadthfirstsearch(graph, enemyloc, playerloc)
         elif self.ai == 1:
-            print('dijkstra')
+            if DEBUG_PATH:
+                print('dijkstra')
             pathdict = dijkstra(graph, enemyloc, playerloc)
-        print('path')
+        if DEBUG_PATH:
+            print('path')
         path = getpath(pathdict, enemyloc, playerloc)
         if len(path) > 2:
-            print('moving')
+            if DEBUG_PATH:
+                print('moving')
             currloc = path.pop(0)
             nextloc = path.pop(0)
             dir_x = np.sign(nextloc[0] - currloc[0])
@@ -153,6 +185,15 @@ class Enemy():
             if not self.rect.colliderect(player.rect):
                 self.rect.x += dir_x * self.speed
                 self.rect.y += dir_y * self.speed
+
+
+def checkhp(enemy_list):
+    '''
+    Kill enemies (delete object instances) if hp is 0.
+    '''
+    for enemy in enemy_list:
+        if enemy.hp <= 0:
+            enemy_list.remove(enemy)
 
 
 class Queue():
@@ -403,7 +444,8 @@ def getpath(pathdict, startloc, endloc):
     Returns:
         path (list): list of tiles from start to end
     '''
-    print(pathdict)
+    if DEBUG_PATH:
+        print(pathdict)
     #path goes backwards since pathdict has edges from startloc to endloc
     #since pathdict[nexttile] gives location of previoustile
     currenttile = endloc
