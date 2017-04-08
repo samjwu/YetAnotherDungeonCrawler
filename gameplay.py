@@ -1,12 +1,12 @@
 #standard modules/libraries
 import pygame, sys, time
 from pygame.locals import *
+import pygame.mixer
 import numpy as np
 import math
 import random
 import collections
 import heapq
-import pygame.mixer
 
 #imported scripts
 import level
@@ -18,7 +18,7 @@ DEBUG_PLAYER = False
 DEBUG_ENEMY = True
 DEBUG_PATH = False
 
-pygame.mixer.init()
+
 
 class Player():
     '''Player class'''
@@ -31,6 +31,8 @@ class Player():
             sprite (image): picture used for player
             speed (int): how fast player should move
         '''
+        self.hp = 100
+        self.maxhp = 100
         self.rect = pygame.Rect(x, y, 0,0)
         self.sprite = sprite
         self.speed = speed
@@ -125,6 +127,7 @@ class Enemy():
             sprite (image): picture used for enemy
             speed (int): how fast enemy should move
         '''
+        self.lasttime = pygame.time.get_ticks()
         self.rect = pygame.Rect(x, y, 0,0)
         self.sprite = sprite
         self.speed = speed

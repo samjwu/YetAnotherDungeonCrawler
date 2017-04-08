@@ -40,6 +40,4 @@ enemy1_y = 360
 enemy1_speed = 30
 
 #sound effects
-pygame.mixer.init()
 punchsound = pygame.mixer.Sound("assets/soundfx/strongpunch.wav")
-print(punchsound)
