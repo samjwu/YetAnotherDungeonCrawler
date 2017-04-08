@@ -2,6 +2,7 @@
 import pygame
 from pygame.locals import *
 import math
+import pygame.mixer
 
 import level
 import level_constants
@@ -37,3 +38,8 @@ enemy1_sprite = spritedict[PIKACHU]
 enemy1_x = 360
 enemy1_y = 360
 enemy1_speed = 30
+
+#sound effects
+pygame.mixer.init()
+punchsound = pygame.mixer.Sound("assets/soundfx/strongpunch.wav")
+print(punchsound)

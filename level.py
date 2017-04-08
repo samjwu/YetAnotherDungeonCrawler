@@ -17,6 +17,7 @@ VISUALIZE_BSP_CONNECT = False
 # Use for testing
 ENABLE_GEN = True
 VH_CONNECT = True
+DEBUG_ROOMS = False
 
 def constrain(n, lower_limit, upper_limit):
     if n < lower_limit:
@@ -213,7 +214,8 @@ class Room(pygame.sprite.Group):
             room_y = random.randint(region_y + 1,
                         (region_y + region_height - 1) - room_height)
         room = cls(room_x, room_y, room_width, room_height)
-        print(room)
+        if DEBUG_ROOMS:
+            print(room)
         return room
 
 
@@ -511,7 +513,8 @@ class Dungeon(pygame.sprite.Sprite):
         return neighbours
 
     def connect_rooms(self, r1, r2):
-        print("Connecting {} and {}".format(r1, r2))
+        if DEBUG_ROOMS:
+            print("Connecting {} and {}".format(r1, r2))
         choices = []
         overlap_y = {y for y in range(r1.y + 1, r1.y + r1.height - 1)} \
                         & {y for y in range(r2.y + 1, r2.y + r2.height - 1)}
@@ -523,7 +526,8 @@ class Dungeon(pygame.sprite.Sprite):
             choices.append("vert")
 
         if not choices:
-            print("L-shaped hallway")
+            if DEBUG_ROOMS:
+                print("L-shaped hallway")
             p1 = random.choice(list(r1.interior.values()))
             p2 = random.choice(list(r2.interior.values()))
             if VISUALIZE_BSP_CONNECT:
@@ -535,10 +539,12 @@ class Dungeon(pygame.sprite.Sprite):
             dy = p2.y - p1.y
             if dx > 0:
                 if dy > 0:
-                    print("Case 1", end="")
+                    if DEBUG_ROOMS:
+                        print("Case 1", end="")
                     if random.random() > 0.5:
                         # Works
-                        print("a")
+                        if DEBUG_ROOMS:
+                            print("a")
                         r1_door_pos = (r1.x + r1.width - 1,  p1.y)
                         r2_door_pos = (p2.x, r2.y)
                         start = (r1_door_pos[0] + 1, r1_door_pos[1])
@@ -548,7 +554,8 @@ class Dungeon(pygame.sprite.Sprite):
                         hallway.create_vert_path((end[0],start[1]), end)
                     else:
                         # Works
-                        print("b")
+                        if DEBUG_ROOMS:
+                            print("b")
                         r1_door_pos = (p1.x, r1.y + r1.height - 1)
                         r2_door_pos = (r2.x, p2.y)
                         start = (r1_door_pos[0], r1_door_pos[1] + 1)
@@ -557,11 +564,13 @@ class Dungeon(pygame.sprite.Sprite):
                         hallway.create_vert_path(start, (start[0], end[1]))
                         hallway.create_horz_path((start[0], end[1]), end)
                 else:
-                    print("Case 2", end="")
+                    if DEBUG_ROOMS:
+                        print("Case 2", end="")
                     if random.random() > 1.0:
                         # Horzontal then vertical
                         # Works
-                        print("a")
+                        if DEBUG_ROOMS:
+                            print("a")
                         r1_door_pos = (r1.x + r1.width - 1, p1.y)
                         r2_door_pos = (p2.x, r2.y + r2.height - 1)
                         start = (r1_door_pos[0] + 1, r1_door_pos[1])
@@ -572,7 +581,8 @@ class Dungeon(pygame.sprite.Sprite):
                     else:
                         # Vertical then horizontal
                         # Works
-                        print("b")
+                        if DEBUG_ROOMS:
+                            print("b")
                         r1_door_pos = (p1.x, r1.y)
                         r2_door_pos = (r2.x, p2.y)
                         start = (r1_door_pos[0], r1_door_pos[1] - 1)
@@ -582,11 +592,13 @@ class Dungeon(pygame.sprite.Sprite):
                         hallway.create_horz_path((start[0], end[1]), end)
             else:
                 if dy > 0:
-                    print("Case 3", end="")
+                    if DEBUG_ROOMS:
+                        print("Case 3", end="")
                     if random.random() > 1.0:
                         # Horizontal then vertical
                         # Works
-                        print("a")
+                        if DEBUG_ROOMS:
+                            print("a")
                         r1_door_pos = (r1.x,  p1.y)
                         r2_door_pos = (p2.x, r2.y)
                         start = (r1_door_pos[0] - 1, r1_door_pos[1])
@@ -597,7 +609,8 @@ class Dungeon(pygame.sprite.Sprite):
                     else:
                         # Vertical then horizontal
                         # Works
-                        print("b")
+                        if DEBUG_ROOMS:
+                            print("b")
                         r1_door_pos = (p1.x, r1.y + r1.height - 1)
                         r2_door_pos = (r2.x + r2.width - 1, p2.y)
                         start = (r1_door_pos[0], r1_door_pos[1] + 1)
@@ -606,9 +619,11 @@ class Dungeon(pygame.sprite.Sprite):
                         hallway.create_vert_path(start, (start[0], end[1]))
                         hallway.create_horz_path((start[0], end[1]), end)
                 else:
-                    print("Case 4", end="")
+                    if DEBUG_ROOMS:
+                        print("Case 4", end="")
                     if random.random() > 1.0:
-                        print("a")
+                        if DEBUG_ROOMS:
+                            print("a")
                         # Horizontal then vertical
                         # Works
                         r1_door_pos = (r1.x,  p1.y)
@@ -619,7 +634,8 @@ class Dungeon(pygame.sprite.Sprite):
                         hallway.create_horz_path(start, (end[0], start[1]))
                         hallway.create_vert_path((end[0], start[1]), end)
                     else:
-                        print("b")
+                        if DEBUG_ROOMS:
+                            print("b")
                         # Vertical then horizontal
                         # Works
                         r1_door_pos = (p1.x, r1.y)
@@ -639,7 +655,8 @@ class Dungeon(pygame.sprite.Sprite):
         else:
             hallway_dir = random.choice(choices)
             if hallway_dir == "horz":
-                print("Horzontal Hallway")
+                if DEBUG_ROOMS:
+                    print("Horzontal Hallway")
                 door_y = random.choice(list(overlap_y))
                 if r1.x < r2.x:
                     r1_door_x = r1.x + r1.width - 1
@@ -661,7 +678,8 @@ class Dungeon(pygame.sprite.Sprite):
                 self.tile_map[(r2_door_x, door_y)].draw()
                 hallway.draw()
             else:
-                print("Vertical Hallway")
+                if DEBUG_ROOMS:
+                    print("Vertical Hallway")
                 door_x = random.choice(list(overlap_x))
                 if r1.y < r2.y:
                     r1_door_y = r1.y + r1.height - 1
@@ -682,7 +700,8 @@ class Dungeon(pygame.sprite.Sprite):
                 self.tile_map[(door_x, r2_door_y)].set_id(DOOR)
                 self.tile_map[(door_x, r2_door_y)].draw()
                 hallway.draw()
-        print(hallway)
+        if DEBUG_ROOMS:
+            print(hallway)
         self.hallways.append(hallway)
         self.tile_map.update(hallway.get_path())
 
@@ -757,9 +776,10 @@ class Dungeon(pygame.sprite.Sprite):
 
         """
         rooms = set()
-        print("Generating")
-        print("region: ( {}, {}, {}, {} )".format(region_x, region_y,
-                                                region_width, region_height))
+        if DEBUG_ROOMS:
+            print("Generating")
+            print("region: ( {}, {}, {}, {} )".format(region_x, region_y,
+                                                    region_width, region_height))
 
         if BSP_CHECK_SPLIT_FIRST:
             choices = []
@@ -788,11 +808,13 @@ class Dungeon(pygame.sprite.Sprite):
                 # that a room will be contained within the region and
                 # will be surrounded by void. If such a bandwith cannot be
                 # created, then the region cannot be split horizontally.
-                print("can't split horizontally")
+                if DEBUG_ROOMS:
+                    print("can't split horizontally")
                 split = False
             if region_width < 2*Dungeon.MIN_WIDTH:
                 # Similar logic as checking horiziontal split
-                print("can't split vertically")
+                if DEBUG_ROOMS:
+                    print("can't split vertically")
                 split = False
             if not split:
                 room = self.add_rand_room(region_x, region_y,
@@ -800,7 +822,8 @@ class Dungeon(pygame.sprite.Sprite):
                 return set([room])
             dung_split = random.choice(["vert", "horz"])
 
-        print(dung_split)
+        if DEBUG_ROOMS:
+            print(dung_split)
         if dung_split == "horz":
             top_height = random.randint(Dungeon.MIN_HEIGHT,
                             region_height - Dungeon.MIN_HEIGHT)
@@ -815,13 +838,15 @@ class Dungeon(pygame.sprite.Sprite):
             bottom_rooms = set()
             top_rooms |= self.generate_dungeon(*top)
             bottom_rooms |= self.generate_dungeon(*bottom)
-            print("top rooms: ")
-            print(*top_rooms)
-            print("bottom rooms: ")
-            print(*bottom_rooms)
+            if DEBUG_ROOMS:
+                print("top rooms: ")
+                print(*top_rooms)
+                print("bottom rooms: ")
+                print(*bottom_rooms)
             r1, r2 = self.closest_room_pair(top_rooms, bottom_rooms)
-            print("r1: ", r1)
-            print("r2: ", r2)
+            if DEBUG_ROOMS:
+                print("r1: ", r1)
+                print("r2: ", r2)
             if r1 is not None and r2 is not None:
                 if VH_CONNECT:
                     self.connect_rooms(r1, r2)
@@ -840,13 +865,15 @@ class Dungeon(pygame.sprite.Sprite):
             right_rooms = set()
             left_rooms |= self.generate_dungeon(*left)
             right_rooms |= self.generate_dungeon(*right)
-            print("left rooms: ")
-            print(*left_rooms)
-            print("right rooms: ")
-            print(*right_rooms)
+            if DEBUG_ROOMS:
+                print("left rooms: ")
+                print(*left_rooms)
+                print("right rooms: ")
+                print(*right_rooms)
             r1, r2 = self.closest_room_pair(left_rooms, right_rooms)
-            print("r1: ", r1)
-            print("r2: ", r2)
+            if DEBUG_ROOMS:
+                print("r1: ", r1)
+                print("r2: ", r2)
             if r1 is not None and r2 is not None:
                 if VH_CONNECT:
                     self.connect_rooms(r1, r2)

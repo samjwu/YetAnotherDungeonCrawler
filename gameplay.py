@@ -6,6 +6,7 @@ import math
 import random
 import collections
 import heapq
+import pygame.mixer
 
 #imported scripts
 import level
@@ -13,11 +14,11 @@ from level_constants import *
 from gameplay_constants import *
 
 #constants for print statements
-DEBUG_PLAYER = True
+DEBUG_PLAYER = False
 DEBUG_ENEMY = True
 DEBUG_PATH = False
 
-
+pygame.mixer.init()
 
 class Player():
     '''Player class'''
@@ -104,9 +105,10 @@ class Player():
         '''
         for enemy in enemy_list:
             if enemy.rect.x > self.rect.x - TILE_SIZE \
-            and enemy.rect.x < self.rect.x + TILE_SIZE \
+            and enemy.rect.x < self.rect.x + 2*TILE_SIZE \
             and enemy.rect.y > self.rect.y - TILE_SIZE \
-            and enemy.rect.y < self.rect.y + TILE_SIZE:
+            and enemy.rect.y < self.rect.y + 2*TILE_SIZE:
+                punchsound.play()
                 enemy.hp -= 10
                 if DEBUG_ENEMY:
                     print('enemy hp: ', enemy.hp)

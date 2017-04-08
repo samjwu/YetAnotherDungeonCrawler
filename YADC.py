@@ -1,13 +1,13 @@
 #modules/libraries
 import pygame, sys
 from pygame.locals import *
+import random
 
 #imported scripts
 import level
 from level_constants import *
 import gameplay
 from gameplay_constants import *
-import random
 
 # pygame.init()
 
@@ -46,6 +46,9 @@ while True:
     gameplay.checkhp(allenemies)
 
     for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.attack(allenemies)
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
@@ -61,8 +64,9 @@ while True:
         player.move(0,1,dungeon.tile_map)
     if keys_pressed[K_DOWN]:
         player.move(0,-1,dungeon.tile_map)
-    if keys_pressed[K_SPACE]:
-        player.attack(allenemies)
+    # if keys_pressed[K_SPACE]:
+    #     pygame.time.wait(500)
+    #     player.attack(allenemies)
 
     pygame.display.update()
     fpsClock.tick(FPS)
