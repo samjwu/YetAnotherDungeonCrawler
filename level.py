@@ -3,7 +3,6 @@ from pygame.locals import *
 import sys
 import random
 from level_constants import *
-import heapq
 sys.setrecursionlimit(30000)
 
 # Modifies behaviour of Dungeon Generator
@@ -16,7 +15,7 @@ VISUALIZE_BSP_CONNECT = False
 
 # Use for testing
 ENABLE_GEN = True
-VH_CONNECT = True
+VHL_CONNECT = True
 DEBUG_ROOMS = False
 
 def constrain(n, lower_limit, upper_limit):
@@ -163,6 +162,9 @@ class Room(pygame.sprite.Group):
         # Add to doors dict and the sprite group
         self.doors.add(door)
         self.add(door)
+
+    def pick_interior_point(self):
+        return random.choice(list(self.interior.keys()))
 
     def __str__(self):
         return "Room: ( {}, {}, {}, {} )".format(self.x, self.y,
@@ -363,10 +365,6 @@ class Hallway(pygame.sprite.Sprite):
     def __str__(self):
         return "Hallway( {}, {} )".format(self.start, self.end)
 
-    # Smallest possbile dimensions of a zigzag path
-    MIN_WIDTH_ZZ = 3
-    MIN_HEIGHT_ZZ = 3
-
 
 class Dungeon(pygame.sprite.Sprite):
     """
@@ -383,6 +381,10 @@ class Dungeon(pygame.sprite.Sprite):
         The dungeon stores the tiles at every position within a tilemap.
         A list of rooms is also stored.
     """
+    MIN_WIDTH = Room.MIN_WIDTH + 2
+    MIN_HEIGHT = Room.MIN_HEIGHT + 2
+    MAX_WIDTH = Room.MAX_WIDTH + 2
+    MAX_HEIGHT = Room.MAX_HEIGHT + 2
     def __init__(self, height=MAP_HEIGHT, width=MAP_WIDTH, tile_size=TILE_SIZE):
         """ Creates new dungeon object
 
@@ -401,12 +403,8 @@ class Dungeon(pygame.sprite.Sprite):
         self.screen = pygame.display.get_surface()
         self.rooms = []
         self.hallways = []
+        self.ladder_pos = None
 
-        # Initialize tile map
-        # self.tile_map = [
-        #     [Tile(VOID, col, row) for col in \
-        #         range(self.width)] for row in range(self.height)
-        # ]
         self.tile_map = dict()
         for x in range(self.width):
             for y in range(self.height):
@@ -415,8 +413,6 @@ class Dungeon(pygame.sprite.Sprite):
         if ENABLE_GEN:
             self.generate_dungeon(0, 0, self.width, self.height)
             self.create_all_hallway_borders()
-        # else:
-        #     self.add_hallway()
 
     def update_tilemap(self, iterable):
         for tile in iterable:
@@ -454,22 +450,38 @@ class Dungeon(pygame.sprite.Sprite):
         rooms = set(rooms)
         return [r for r in self.rooms if r not in rooms]
 
-    def add_hallway(self):
-        start = (5, 3)
-        end = (13, 10)
-        hallway = Hallway(start, end)
-        self.hallways.append(hallway)
-        # hallway.create_horz_path(start, end)
-        # hallway.create_vert_path(start,end)
-        hallway.create_lshaped_path(start, end)
-        # self.update_tilemap(hallway.get_path_list() + hallway.get_border_list())
-        self.update_tilemap(hallway.get_tile_dict())
-        hallway.draw()
+    @staticmethod
+    def farthest_room(room_from, room_list):
+        """ Finds farthest room within a list of rooms from a given starting
+            room
 
-    MIN_WIDTH = Room.MIN_WIDTH + 2
-    MIN_HEIGHT = Room.MIN_HEIGHT + 2
-    MAX_WIDTH = Room.MAX_WIDTH + 2
-    MAX_HEIGHT = Room.MAX_HEIGHT + 2
+            Arguments:
+                room_from (Room): start room_from
+                room_list (list: Room): sequence of rooms to search
+
+            Runtime: O(len(room_list))
+        """
+        farthest_room = None
+        max_dist = 0
+        for room_to in room_list:
+            dist = abs(room_to.center[0] - room_from.center[0]) \
+                    + abs(room_to.center[1] - room_from.center[1])
+            if dist > max_dist:
+                max_dist = dist
+                farthest_room = room_to
+        return farthest_room
+
+    def place_ladder(self, player_room):
+        ladder_room = self.farthest_room(player_room, self.rooms)
+        self.ladder_pos = ladder_room.pick_interior_point()
+        # Drawing ladder doesn't work for some reason
+        self.screen.blit(ladder_img,
+            (self.ladder_pos[0]*TILE_SIZE, self.ladder_pos[1]*TILE_SIZE))
+
+    def check_ladder_reached(self, player):
+        dx = int(abs(player.rect.x/TILE_SIZE - self.ladder_pos[0]))
+        dy = int(abs(player.rect.y/TILE_SIZE - self.ladder_pos[1]))
+        return dx == 0 and dy == 0
 
     @staticmethod
     def manhattan_dist(curr, goal):
@@ -723,7 +735,7 @@ class Dungeon(pygame.sprite.Sprite):
             if dist < min_dist:
                 min_dist = dist
                 closest_room = room_to
-        return room_to
+        return closest_room
 
     @staticmethod
     def closest_room_pair(room_iterable_1, room_iterable_2):
@@ -848,7 +860,7 @@ class Dungeon(pygame.sprite.Sprite):
                 print("r1: ", r1)
                 print("r2: ", r2)
             if r1 is not None and r2 is not None:
-                if VH_CONNECT:
+                if VHL_CONNECT:
                     self.connect_rooms(r1, r2)
             rooms.update(top_rooms | bottom_rooms)
         else:
@@ -875,7 +887,7 @@ class Dungeon(pygame.sprite.Sprite):
                 print("r1: ", r1)
                 print("r2: ", r2)
             if r1 is not None and r2 is not None:
-                if VH_CONNECT:
+                if VHL_CONNECT:
                     self.connect_rooms(r1, r2)
             rooms.update(left_rooms | right_rooms)
 

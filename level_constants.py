@@ -4,18 +4,23 @@ from pygame.locals import *
 # game dungeon dimensions
 TILE_SIZE = 30
 MAP_WIDTH = 30
-MAP_HEIGHT = 20
+MAP_HEIGHT = 30
+
+# Used to display player stats etc.
+DISPLAY_AREA_WIDTH = 10
 
 # initialize game surface
 pygame.init()
 DISPLAY_SURFACE = \
-    pygame.display.set_mode((MAP_WIDTH*TILE_SIZE,MAP_HEIGHT*TILE_SIZE))
+    pygame.display.set_mode(
+        ((MAP_WIDTH+DISPLAY_AREA_WIDTH)*TILE_SIZE, MAP_HEIGHT*TILE_SIZE))
 pygame.display.set_caption("YetAnotherDungeonCrawler (YADC)")
 
 # color constants
-black = (0,0,0)
-white = (255, 255, 255)
-green = (0, 255, 0)
+BLACK = (0,0,0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+SILVER = (192,192,192)
 
 # load images for tiles
 floor_img = pygame.image.load("assets/images/floor_scaled.jpg").convert()
@@ -31,8 +36,7 @@ GRASS = 2
 WALL = 3
 DOOR = 4
 
-# create dictionary to represent tiles
-# TILE : (image_surface, colour)
+# map of tile images: tile_id: image
 tile_images = {
     VOID: void_img,
     FLOOR: floor_img,
@@ -41,4 +45,6 @@ tile_images = {
     DOOR: door_img
 }
 
-tile_types = list(tile_images.keys())
+# load images for ladder
+ladder_img = \
+    pygame.image.load("assets/images/ladder_scaled.png").convert_alpha()

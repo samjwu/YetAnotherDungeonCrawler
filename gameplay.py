@@ -15,10 +15,8 @@ from gameplay_constants import *
 
 #constants for print statements
 DEBUG_PLAYER = False
-DEBUG_ENEMY = True
+DEBUG_ENEMY = False
 DEBUG_PATH = False
-
-
 
 class Player():
     '''Player class'''
@@ -36,6 +34,8 @@ class Player():
         self.rect = pygame.Rect(x, y, 0,0)
         self.sprite = sprite
         self.speed = speed
+        self.hp = 100
+        self.max_hp = 100
 
     def draw(self):
         level.DISPLAY_SURFACE.blit(self.sprite, (self.rect.x, self.rect.y))

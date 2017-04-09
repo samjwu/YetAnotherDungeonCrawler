@@ -8,20 +8,22 @@ import level
 from level_constants import *
 import gameplay
 from gameplay_constants import *
+import display
+import random
 
 # pygame.init()
-
 dungeon = level.Dungeon()
+DISPLAY_SURFACE.blit(ladder_img, (0, 0))
 
 player_room = dungeon.pick_random_room()
-player_spawn_point = random.choice(list(player_room.interior.keys()))
+player_spawn_point = player_room.pick_interior_point()
 player_spawn_point = tuple([c*TILE_SIZE for c in player_spawn_point])
 
 print("player room: ", player_room)
 print("player spawn point: ", player_spawn_point)
 
 enemy_room = random.choice(dungeon.filter_rooms(player_room))
-enemy_spawn_point = random.choice(list(enemy_room.interior.keys()))
+enemy_spawn_point = enemy_room.pick_interior_point()
 enemy_spawn_point = tuple([c*TILE_SIZE for c in enemy_spawn_point])
 
 print("enemy room: ", enemy_room)
@@ -31,11 +33,23 @@ player = gameplay.Player(player_spawn_point[0], player_spawn_point[1], player_sp
 enemy1 = gameplay.Enemy(enemy_spawn_point[0], enemy_spawn_point[1], enemy1_sprite, enemy1_speed)
 allenemies = [enemy1]
 
+dungeon.place_ladder(player_room)
+print("ladder: ", dungeon.ladder_pos)
+
 weightedgrid = gameplay.WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
 weightedgrid.getwalls(dungeon)
 
-while True:
+da = display.DisplayArea()
+da.fill_area()
+
+running = True
+while running:
     dungeon.draw((dungeon.width,), (dungeon.height,))
+
+    if dungeon.check_ladder_reached(player):
+        print("Ladder reached")
+        print("You win!!!")
+        running = False
 
     player.draw()
     for enemy in allenemies:
@@ -50,8 +64,7 @@ while True:
             if event.key == pygame.K_SPACE:
                 player.attack(allenemies)
         if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
 
     enemy1.chase_player(player, weightedgrid)
 
@@ -70,3 +83,6 @@ while True:
 
     pygame.display.update()
     fpsClock.tick(FPS)
+
+pygame.quit()
+sys.exit()
