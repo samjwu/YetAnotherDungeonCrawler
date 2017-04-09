@@ -475,8 +475,9 @@ class Dungeon(pygame.sprite.Sprite):
         ladder_room = self.farthest_room(player_room, self.rooms)
         self.ladder_pos = ladder_room.pick_interior_point()
         # Drawing ladder doesn't work for some reason
-        self.screen.blit(ladder_img,
-            (self.ladder_pos[0]*TILE_SIZE, self.ladder_pos[1]*TILE_SIZE))
+        self.tile_map[self.ladder_pos] = Tile(LADDER,
+            self.ladder_pos[0], self.ladder_pos[1])
+        self.tile_map[self.ladder_pos].draw()
 
     def check_ladder_reached(self, player):
         dx = int(abs(player.rect.x/TILE_SIZE - self.ladder_pos[0]))

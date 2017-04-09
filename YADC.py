@@ -11,53 +11,59 @@ from gameplay_constants import *
 import display
 import random
 
-# pygame.init()
-dungeon = level.Dungeon()
-DISPLAY_SURFACE.blit(ladder_img, (0, 0))
+dungeon = None
+weightedgrid = None
+player = None
+allenemies = []
 
-player_room = dungeon.pick_random_room()
-player_spawn_point = player_room.pick_interior_point()
-player_spawn_point = tuple([c*TILE_SIZE for c in player_spawn_point])
+def create_level():
+    global dungeon
+    global weightedgrid
+    global player
+    global allenemies
 
-print("player room: ", player_room)
-print("player spawn point: ", player_spawn_point)
+    dungeon = level.Dungeon()
 
-enemy_room = random.choice(dungeon.filter_rooms(player_room))
-enemy_spawn_point = enemy_room.pick_interior_point()
-enemy_spawn_point = tuple([c*TILE_SIZE for c in enemy_spawn_point])
+    player_room = dungeon.pick_random_room()
+    player_spawn_point = player_room.pick_interior_point()
+    player_spawn_point = tuple([c*TILE_SIZE for c in player_spawn_point])
+    player = gameplay.Player(player_spawn_point[0], player_spawn_point[1],
+        player_sprite, player_speed)
 
-print("enemy room: ", enemy_room)
-print("enemy spawn point: ", enemy_spawn_point)
+    num_enemies = random.randint(1, 5)
 
-player = gameplay.Player(player_spawn_point[0], player_spawn_point[1], player_sprite, player_speed)
-enemy1 = gameplay.Enemy(enemy_spawn_point[0], enemy_spawn_point[1], enemy1_sprite, enemy1_speed)
-allenemies = [enemy1]
+    for enemy in range(num_enemies):
+        enemy_room = random.choice(dungeon.filter_rooms(player_room))
+        enemy_spawn_point = enemy_room.pick_interior_point()
+        enemy_spawn_point = tuple([c*TILE_SIZE for c in enemy_spawn_point])
 
-dungeon.place_ladder(player_room)
-print("ladder: ", dungeon.ladder_pos)
+        enemy = gameplay.Enemy(enemy_spawn_point[0], enemy_spawn_point[1],
+            enemy1_sprite, enemy1_speed)
+        allenemies.append(enemy)
 
-weightedgrid = gameplay.WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
-weightedgrid.getwalls(dungeon)
+    dungeon.place_ladder(player_room)
 
-da = display.DisplayArea()
-da.fill_area()
+    weightedgrid = gameplay.WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
+    weightedgrid.getwalls(dungeon)
 
+    da = display.DisplayArea()
+    da.fill_area()
+
+
+create_level()
 running = True
 while running:
     dungeon.draw((dungeon.width,), (dungeon.height,))
 
     if dungeon.check_ladder_reached(player):
         print("Ladder reached")
-        print("You win!!!")
-        running = False
+        create_level()
+
 
     player.draw()
+    gameplay.checkhp(allenemies)
     for enemy in allenemies:
         enemy.draw()
-
-    # level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
-    # level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy1.rect.x, enemy1.rect.y))
-    gameplay.checkhp(allenemies)
 
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
@@ -66,7 +72,8 @@ while running:
         if event.type == QUIT:
             running = False
 
-    enemy1.chase_player(player, weightedgrid)
+    for enemy in allenemies:
+        enemy.chase_player(player, weightedgrid)
 
     keys_pressed = pygame.key.get_pressed()
     if keys_pressed[K_LEFT]:

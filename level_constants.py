@@ -28,6 +28,7 @@ void_img = pygame.image.load("assets/images/void_scaled.jpg").convert()
 grass_img = pygame.image.load("assets/images/grass_scaled.jpg").convert()
 wall_img = pygame.image.load("assets/images/wall_scaled.jpg").convert()
 door_img = pygame.image.load("assets/images/door_scaled.jpg").convert()
+ladder_img = pygame.image.load("assets/images/ladder_scaled.jpg").convert()
 
 # constants to represent tiles
 VOID = 0
@@ -35,6 +36,7 @@ FLOOR = 1
 GRASS = 2
 WALL = 3
 DOOR = 4
+LADDER = 5
 
 # map of tile images: tile_id: image
 tile_images = {
@@ -42,9 +44,6 @@ tile_images = {
     FLOOR: floor_img,
     GRASS: grass_img,
     WALL: wall_img,
-    DOOR: door_img
+    DOOR: door_img,
+    LADDER: ladder_img
 }
-
-# load images for ladder
-ladder_img = \
-    pygame.image.load("assets/images/ladder_scaled.png").convert_alpha()
