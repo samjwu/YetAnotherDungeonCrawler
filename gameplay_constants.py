@@ -42,3 +42,5 @@ enemy1_speed = 30
 #sound effects
 punchsound = pygame.mixer.Sound("assets/soundfx/strongpunch.wav")
 gameover = pygame.mixer.Sound("assets/soundfx/gameover.wav")
+pikachu_attack = pygame.mixer.Sound("assets/soundfx/pikachu_attack.wav")
+pikachu_die = pygame.mixer.Sound("assets/soundfx/pikachu_die.wav")

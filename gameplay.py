@@ -14,11 +14,9 @@ from level_constants import *
 from gameplay_constants import *
 
 #constants for print statements
-DEBUG_PLAYER = True
+DEBUG_PLAYER = False
 DEBUG_ENEMY = False
 DEBUG_PATH = False
-
-ENABLE_GAMEOVER_SFX = True
 
 class Player():
     '''Player class'''
@@ -120,16 +118,16 @@ class Player():
     def died(self):
         ''' Returns True if player's health is zero '''
         if self.hp <= 0:
-            if ENABLE_GAMEOVER_SFX:
-                # wait for punch sounds to finish
-                while pygame.mixer.get_busy():
-                    pygame.time.delay(1)
-                # play game over sound
-                gameover.play()
-                # wait for gameover sound to finish
-                while pygame.mixer.get_busy():
-                    pygame.time.delay(1)
+            # wait for other sounds to finish
+            while pygame.mixer.get_busy():
+                pygame.time.delay(1)
+            # play game over sound
+            gameover.play()
+            # wait for gameover sound to finish
+            while pygame.mixer.get_busy():
+                pygame.time.delay(1)
             return True
+        return False
 
 class Enemy():
     '''Class for enemy objects'''
@@ -211,18 +209,26 @@ class Enemy():
             and player.rect.x < self.rect.x + 2*TILE_SIZE \
             and player.rect.y > self.rect.y - TILE_SIZE \
             and player.rect.y < self.rect.y + 2*TILE_SIZE:
-                punchsound.play()
+                pikachu_attack.play()
                 player.hp -= 10
                 if DEBUG_PLAYER:
                     print('player hp: ', player.hp)
 
+    def died(self):
+        ''' Returns True if player's health is zero '''
+        if self.hp <= 0:
+            while pygame.mixer.get_busy():
+                pygame.time.delay(1)
+            pikachu_die.play()
+            return True
+        return False
 
 def checkhp(enemy_list):
     '''
     Kill enemies (delete object instances) if hp is 0.
     '''
     for enemy in enemy_list:
-        if enemy.hp <= 0:
+        if enemy.died():
             enemy_list.remove(enemy)
 
 
