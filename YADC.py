@@ -74,6 +74,11 @@ while running:
 
     for enemy in allenemies:
         enemy.chase_player(player, weightedgrid)
+        enemy.attack(player)
+
+    if player.died():
+        print("You died!!!!")
+        running = False
 
     keys_pressed = pygame.key.get_pressed()
     if keys_pressed[K_LEFT]:

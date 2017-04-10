@@ -10,6 +10,7 @@ MAP_HEIGHT = 30
 DISPLAY_AREA_WIDTH = 10
 
 # initialize game surface
+pygame.mixer.init()
 pygame.init()
 DISPLAY_SURFACE = \
     pygame.display.set_mode(
@@ -29,6 +30,7 @@ grass_img = pygame.image.load("assets/images/grass_scaled.jpg").convert()
 wall_img = pygame.image.load("assets/images/wall_scaled.jpg").convert()
 door_img = pygame.image.load("assets/images/door_scaled.jpg").convert()
 ladder_img = pygame.image.load("assets/images/ladder_scaled.jpg").convert()
+xmark_img = pygame.image.load("assets/images/xmark_scaled.jpg").convert()
 
 # constants to represent tiles
 VOID = 0
@@ -37,6 +39,7 @@ GRASS = 2
 WALL = 3
 DOOR = 4
 LADDER = 5
+XMARK = 6
 
 # map of tile images: tile_id: image
 tile_images = {
@@ -45,5 +48,6 @@ tile_images = {
     GRASS: grass_img,
     WALL: wall_img,
     DOOR: door_img,
-    LADDER: ladder_img
+    LADDER: ladder_img,
+    XMARK: xmark_img
 }

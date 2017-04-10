@@ -41,3 +41,4 @@ enemy1_speed = 30
 
 #sound effects
 punchsound = pygame.mixer.Sound("assets/soundfx/strongpunch.wav")
+gameover = pygame.mixer.Sound("assets/soundfx/gameover.wav")

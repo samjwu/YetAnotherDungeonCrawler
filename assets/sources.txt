@@ -1,13 +1,19 @@
+--------------------------------------------------------------------------------
+images
+--------------------------------------------------------------------------------
+
 Dungeon Floor:
 http://m.blog.naver.com/blue9954/50177364553
 Void:
 http://ethenyl.deviantart.com/art/Black-Texture-100608349
 Grass:
-http://media.moddb.com/images/groups/1/4/3338/grass2_hsvnoise.jpg
+http://nobacks.com/green-grass-twenty-five/
 Wall:
 https://s-media-cache-ak0.pinimg.com/736x/07/33/16/073316b9983e580eaa8746f1857c8bd9.jp
 Door:
 http://spiralgraphics.biz/packs/door_medieval/index.htm?0#anchor
+X-Mark:
+http://www.clipartkid.com/images/573/red-x-mark-4-icon-free-red-x-mark-icons-5br1Kr-clipart.gif
 
 Ladder:
 https://vignette2.wikia.nocookie.net/minecraft/images/1/10/Ladders.png/revision/latest?cb=20111016173249
@@ -17,5 +23,12 @@ http://now.unfolded.ch/tag/technology/
 Pikachu:
 http://lawlkittyface.deviantart.com/art/Pikachu-pixel-363799964g
 
-Sound Effects:
+--------------------------------------------------------------------------------
+Sound Effects
+--------------------------------------------------------------------------------
+
+Strong Punch:
 http://soundbible.com/tags-smash.html
+
+Game Over:
+https://www.reddit.com/r/metalgearsolid/comments/1jt1vg/official_metal_gear_solid_sound_effects/

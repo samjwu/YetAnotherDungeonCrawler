@@ -17,3 +17,6 @@ https://gamedevelopment.tutsplus.com/tutorials/create-a-procedurally-generated-d
 
 A* Search
 http://www.redblobgames.com/pathfinding/a-star/introduction.html
+
+Pygame Sound:
+http://code.activestate.com/recipes/521884-play-sound-files-with-pygame-in-a-cross-platform-m/
