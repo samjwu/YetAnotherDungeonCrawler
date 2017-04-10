@@ -3,8 +3,8 @@ from pygame.locals import *
 
 # game dungeon dimensions
 TILE_SIZE = 30
-MAP_WIDTH = 30
-MAP_HEIGHT = 30
+MAP_WIDTH = 20
+MAP_HEIGHT = 20
 
 # Used to display player stats etc.
 DISPLAY_AREA_WIDTH = 10

@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import sys
 import random
+
 from level_constants import *
 sys.setrecursionlimit(30000)
 
@@ -16,9 +17,9 @@ VISUALIZE_CONNECT = False
 # Enables Generation of Dungeon
 ENABLE_GEN = True
 
-# Enables Creation of Hallways between generateed rooms
+# Enables Creation of Hallways between generated rooms
 # Note if this is enabled while enemies are on map this will lead to key errors
-# in the breath first search and djikstra's of the enemy.chase_player() method
+# in the breadth first search and djikstra's of the enemy.chase_player() method
 VHL_CONNECT = True
 
 # Enable diagnostic prints for generating rooms via BSP
@@ -45,7 +46,7 @@ class Tile(pygame.sprite.Sprite):
 
             Arguments:
                 tile_id (int): integer that represents the type of the tile,
-                    default defiend in constants file
+                    default defined in constants file
                 x (int): horiziontal position of topleft corner
                 y (int): vertical position of topleft corner
         """
@@ -868,12 +869,12 @@ class Dungeon(pygame.sprite.Sprite):
             rooms are done in a bottom-up fashion. Each region in the dungeon
             must be connected is connected to its closest sister. Once all the
             regions have been connected, there is guaranteed to be a path to
-            every room within dungeon. Note, this way of conneting the rooms is
+            every room within dungeon. Note, this way of connecting the rooms is
             not strictly a required feature of BSP, but instead our addition.
             Note: that this does not absolutely guarantee that the connection
                 will be proper (ie, with no tearing of room). That can happen
-                every once in a while, perhpas more checks need to be done to
-                ensure wheter the connection can be made.
+                every once in a while, perhaps more checks need to be done to
+                ensure whether the connection can be made.
 
             Arguments:
                 region_x (int): x position of topleft corner of enclosing region

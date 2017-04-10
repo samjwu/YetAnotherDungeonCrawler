@@ -1,13 +1,13 @@
 #modules/libraries
 import pygame, sys
 from pygame.locals import *
+import random
 
 #imported scripts
 import level
 from level_constants import *
 import gameplay
 from gameplay_constants import *
-import random
 
 class DisplayArea():
     def __init__(self):

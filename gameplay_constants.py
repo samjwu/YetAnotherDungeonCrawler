@@ -9,7 +9,9 @@ import level_constants
 
 #set framerate
 FPS = 30
-fpsClock=pygame.time.Clock()
+enemyframes = 20
+fpsClock = pygame.time.Clock()
+enemyclock = pygame.time.Clock()
 
 #load images for sprites
 sprite0 = pygame.image.load("assets/images/calvin.png").convert_alpha()
@@ -26,18 +28,16 @@ spritedict = {
     PIKACHU: sprite1
 }
 
-# player
+# player constants
 player_sprite = spritedict[CALVIN]
 player_x = 30
 player_y = 30
-player_speed = 10
+player_speed = 30
 
-# enemies
+# enemy constants
 AI = 2
 enemy1_sprite = spritedict[PIKACHU]
-enemy1_x = 360
-enemy1_y = 360
-enemy1_speed = 30
+enemy1_speed = 10
 
 #sound effects
 punchsound = pygame.mixer.Sound("assets/soundfx/strongpunch.wav")

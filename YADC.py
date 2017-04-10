@@ -9,7 +9,6 @@ from level_constants import *
 import gameplay
 from gameplay_constants import *
 import display
-import random
 
 dungeon = None
 weightedgrid = None
@@ -77,7 +76,7 @@ while running:
         enemy.attack(player)
 
     if player.died():
-        print("You died!!!!")
+        print("GAME OVER")
         running = False
 
     keys_pressed = pygame.key.get_pressed()
@@ -89,9 +88,6 @@ while running:
         player.move(0,1,dungeon.tile_map)
     if keys_pressed[K_DOWN]:
         player.move(0,-1,dungeon.tile_map)
-    # if keys_pressed[K_SPACE]:
-    #     pygame.time.wait(500)
-    #     player.attack(allenemies)
 
     pygame.display.update()
     fpsClock.tick(FPS)

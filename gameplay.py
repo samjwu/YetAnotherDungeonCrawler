@@ -116,7 +116,10 @@ class Player():
                     print('enemy hp: ', enemy.hp)
 
     def died(self):
-        ''' Returns True if player's health is zero '''
+        '''
+        Returns True if player's health is zero.
+        Play a sound effect and end the game.
+        '''
         if self.hp <= 0:
             # wait for other sounds to finish
             while pygame.mixer.get_busy():
@@ -203,6 +206,7 @@ class Enemy():
             if not self.rect.colliderect(player.rect):
                 self.rect.x += dir_x * self.speed
                 self.rect.y += dir_y * self.speed
+                enemyclock.tick(enemyframes)
 
     def attack(self, player):
         if player.rect.x > self.rect.x - TILE_SIZE \
@@ -210,12 +214,15 @@ class Enemy():
             and player.rect.y > self.rect.y - TILE_SIZE \
             and player.rect.y < self.rect.y + 2*TILE_SIZE:
                 pikachu_attack.play()
-                player.hp -= 10
+                player.hp -= 1
                 if DEBUG_PLAYER:
                     print('player hp: ', player.hp)
 
     def died(self):
-        ''' Returns True if player's health is zero '''
+        '''
+        Returns True if enemy health is zero.
+        Play a sound effect.
+        '''
         if self.hp <= 0:
             while pygame.mixer.get_busy():
                 pygame.time.delay(1)
@@ -225,7 +232,8 @@ class Enemy():
 
 def checkhp(enemy_list):
     '''
-    Kill enemies (delete object instances) if hp is 0.
+    Check hp of all enemies and kill an enemy
+    (by deleting object instances) if its hp is 0.
     '''
     for enemy in enemy_list:
         if enemy.died():
@@ -495,91 +503,3 @@ def getpath(pathdict, startloc, endloc):
     #since list is backwards, reverse it
     path.reverse()
     return path
-
-
-
-
-# pygame.init()
-#
-# dungeon = level.Dungeon()
-#
-# room1 = level.Room(0,0,20,20)
-# dungeon.rooms.append(room1)
-# dungeon.update_tilemap(room1)
-# room1.draw()
-#
-# room2 = level.Room(10,10,6,6)
-# dungeon.rooms.append(room2)
-# dungeon.update_tilemap(room2)
-# room2.draw()
-#
-# start = (5, 3)
-# end = (13, 10)
-# hallway = level.Hallway(start, end)
-# dungeon.hallways.append(hallway)
-# hallway.create_lshaped_path(start, end)
-# dungeon.update_tilemap(hallway.get_path_list() + hallway.get_border_list())
-# hallway.draw()
-#
-# dungeon.add_hallway()
-#
-# player = Player(player_x, player_y, player_sprite, player_speed)
-# enemy1 = Enemy(enemy1_x, enemy1_y, enemy1_sprite, enemy1_speed)
-# allenemies = [enemy1]
-#
-# # TESTS
-# tilegraph = TileGraph()
-# tilegraph.getdungeonedges()
-# print(tilegraph.edges)
-#
-# # TESTS
-# tilegrid = TileGrid(30,20)
-# tilegrid.getwalls(dungeon)
-# print(tilegrid.walls)
-#
-# # Important
-# wtgrid = WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
-# wtgrid.getwalls(dungeon)
-#
-# # TESTS
-# print(wtgrid.walls)
-# print('bfs')
-# pathdict = bfs(wtgrid, (1,1), (12,12))
-# print(pathdict)
-# print('bfs path')
-# print(getpath(pathdict, (1,1), (12,12)))
-# print('dijkstra')
-# pathdict, pathcost = dijkstra(wtgrid, (1,1), (12,12))
-# print(pathdict)
-# print('dijkstra path')
-# print(getpath(pathdict, (1,1), (12,12)))
-#
-#
-# while True:
-#     dungeon.draw((dungeon.width,), (dungeon.height,))
-#
-#     level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
-#     level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy1.rect.x, enemy1.rect.y))
-#
-#     for event in pygame.event.get():
-#         if event.type == QUIT:
-#             pygame.quit()
-#             sys.exit()
-#
-#     enemy1.chase_player(player)
-#     player.collision(allenemies)
-#
-#     # print(dungeon.tile_map)
-#
-#     keys_pressed = pygame.key.get_pressed()
-#     if keys_pressed[K_LEFT]:
-#         player.move(-1,0,dungeon.tile_map)
-#     if keys_pressed[K_RIGHT]:
-#         player.move(1,0,dungeon.tile_map)
-#     if keys_pressed[K_UP]:
-#         player.move(0,1,dungeon.tile_map)
-#     if keys_pressed[K_DOWN]:
-#         player.move(0,-1,dungeon.tile_map)
-#
-#     pygame.display.update()
-#     fpsClock.tick(FPS)
