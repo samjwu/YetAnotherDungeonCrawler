@@ -20,22 +20,19 @@ DEBUG_PATH = False
 
 class Player():
     '''Player class'''
-    def __init__(self, x, y, sprite, speed):
+    def __init__(self, x, y, spritenum):
         '''
         Create a player object.
         Arguments:
             x (int): horizontal position of player
             y (int): vertical position of player
-            sprite (image): picture used for player
-            speed (int): how fast player should move
+            spritenum (int): the number or index of the sprite
         '''
-        self.hp = 100
-        self.maxhp = 100
         self.rect = pygame.Rect(x, y, 0,0)
-        self.sprite = sprite
-        self.speed = speed
-        self.hp = 100
-        self.max_hp = 100
+        self.sprite = spritedict[spritenum][0]
+        self.hp = spritedict[spritenum][1]
+        self.damage = spritedict[spritenum][2]
+        self.speed = spritedict[spritenum][3]
 
     def draw(self):
         level.DISPLAY_SURFACE.blit(self.sprite, (self.rect.x, self.rect.y))
@@ -111,7 +108,7 @@ class Player():
             and enemy.rect.y > self.rect.y - TILE_SIZE \
             and enemy.rect.y < self.rect.y + 2*TILE_SIZE:
                 punchsound.play()
-                enemy.hp -= 10
+                enemy.hp -= self.damage
                 if DEBUG_ENEMY:
                     print('enemy hp: ', enemy.hp)
 
@@ -134,20 +131,19 @@ class Player():
 
 class Enemy():
     '''Class for enemy objects'''
-    def __init__(self, x, y, sprite, speed):
+    def __init__(self, x, y, spritenum):
         '''
         Create an enemy object.
         Arguments:
             x (int): horizontal position of enemy
             y (int): vertical position of enemy
-            sprite (image): picture used for enemy
-            speed (int): how fast enemy should move
+            spritenum (int): the number or index of the sprite
         '''
-        self.lasttime = pygame.time.get_ticks()
         self.rect = pygame.Rect(x, y, 0,0)
-        self.sprite = sprite
-        self.speed = speed
-        self.hp = 100
+        self.sprite = spritedict[spritenum][0]
+        self.hp = spritedict[spritenum][1]
+        self.damage = spritedict[spritenum][2]
+        self.speed = spritedict[spritenum][3]
         self.ai = random.randint(0,AI-1)
 
     def draw(self):
@@ -214,7 +210,7 @@ class Enemy():
             and player.rect.y > self.rect.y - TILE_SIZE \
             and player.rect.y < self.rect.y + 2*TILE_SIZE:
                 pikachu_attack.play()
-                player.hp -= 1
+                player.hp -= self.damage
                 if DEBUG_PLAYER:
                     print('player hp: ', player.hp)
 

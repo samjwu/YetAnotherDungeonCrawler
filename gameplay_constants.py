@@ -23,21 +23,14 @@ CALVIN = 0
 PIKACHU = 1
 
 #dictionary to represent sprites
+#values: image,hp,damage,speed
 spritedict = {
-    CALVIN: sprite0,
-    PIKACHU: sprite1
+    CALVIN: (sprite0,100,25,30),
+    PIKACHU: (sprite1,100,1,10)
 }
-
-# player constants
-player_sprite = spritedict[CALVIN]
-player_x = 30
-player_y = 30
-player_speed = 30
 
 # enemy constants
 AI = 2
-enemy1_sprite = spritedict[PIKACHU]
-enemy1_speed = 10
 
 #sound effects
 punchsound = pygame.mixer.Sound("assets/soundfx/strongpunch.wav")

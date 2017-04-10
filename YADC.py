@@ -26,8 +26,7 @@ def create_level():
     player_room = dungeon.pick_random_room()
     player_spawn_point = player_room.pick_interior_point()
     player_spawn_point = tuple([c*TILE_SIZE for c in player_spawn_point])
-    player = gameplay.Player(player_spawn_point[0], player_spawn_point[1],
-        player_sprite, player_speed)
+    player = gameplay.Player(player_spawn_point[0], player_spawn_point[1], 0)
 
     num_enemies = random.randint(1, 5)
 
@@ -36,8 +35,8 @@ def create_level():
         enemy_spawn_point = enemy_room.pick_interior_point()
         enemy_spawn_point = tuple([c*TILE_SIZE for c in enemy_spawn_point])
 
-        enemy = gameplay.Enemy(enemy_spawn_point[0], enemy_spawn_point[1],
-            enemy1_sprite, enemy1_speed)
+        enemy = gameplay.Enemy(enemy_spawn_point[0], enemy_spawn_point[1], \
+                random.randint(1, 1))
         allenemies.append(enemy)
 
     dungeon.place_ladder(player_room)
