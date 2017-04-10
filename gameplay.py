@@ -122,7 +122,7 @@ class Player():
             while pygame.mixer.get_busy():
                 pygame.time.delay(1)
             # play game over sound
-            gameover.play()
+            gameover_snake.play()
             # wait for gameover sound to finish
             while pygame.mixer.get_busy():
                 pygame.time.delay(1)
