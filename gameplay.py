@@ -14,8 +14,8 @@ from level_constants import *
 from gameplay_constants import *
 
 #constants for print statements (for testing)
-DEBUG_PLAYER = False
-DEBUG_ENEMY = False
+DEBUG_PLAYER = True
+DEBUG_ENEMY = True
 DEBUG_PATH = False
 RUN_PATH_TESTS = False
 
@@ -123,6 +123,7 @@ class Player():
         Play a sound effect and end the game.
         '''
         if self.hp <= 0:
+            self.sprite = spritedict[ITACHI][0]
             # wait for other sounds to finish
             while pygame.mixer.get_busy():
                 pygame.time.delay(1)
@@ -427,6 +428,22 @@ class WeightedTileGrid(TileGrid):
 
 
 def depthfirstsearch(graph, startloc, endloc):
+    '''
+    Depth first search on the given graph.
+    Starts at the startloc tile and continues visiting all neighbors
+    down a path until it reaches a path that ends on the endloc tile.
+    Does not use weights or heuristic.
+    Will not always find the shortest path (in number of steps).
+    Time Complexity:
+        O(|V|+2|E|)
+    Args:
+        graph (TileGrid): instance of the undirected graph of tiles
+        startloc (tuple): coordinates of start tile
+        endloc (tuple): coordinates of end tile
+    Returns:
+        visited (dict): dictionary with keys as destination
+                        and values as previous tile
+    '''
     #note push/pop for deques take O(1) time
     tosearch = Deque() #used as stack
     tosearch.pushfront(startloc)
@@ -500,7 +517,7 @@ def dijkstra(graph, startloc, endloc):
     Use weights, but no heuristic.
     Will always find the shortest path (in terms of weight).
     Time Complexity:
-        O((|V|+2|E|)+log|V|) = O(2|E|log|V|)
+        O((|V|+2|E|)log|V|) = O(2|E|log|V|)
     Args:
         graph (WeightedTileGrid): instance of the undirected graph of tiles
         startloc (tuple): coordinates of start tile
@@ -531,7 +548,8 @@ def dijkstra(graph, startloc, endloc):
         for nexttile in graph.neighbors(currenttile):
             # print('nexttile: ',nexttile)
             #newpathcost is currpathcost plus newedgecost
-            newpathcost = pathcost[currenttile] + graph.cost(currenttile, nexttile)
+            newpathcost = pathcost[currenttile] \
+            + graph.cost(currenttile, nexttile)
             #edge additions take O(2|E|) for undirected graph (handshake lemma)
             if nexttile not in visited or newpathcost < pathcost[nexttile]:
                 priority = newpathcost #priority for low path cost
@@ -567,7 +585,7 @@ def bestfirstsearch(graph, startloc, endloc):
     Does not use weights but uses heuristic.
     greedisgood
     Time Complexity:
-        O((|V|+2|E|)+log|V|) = O(2|E|log|V|)
+        O((|V|+2|E|)log|V|) = O(2|E|log|V|)
     Args:
         graph (WeightedTileGrid): instance of the undirected graph of tiles
         startloc (tuple): coordinates of start tile
@@ -610,7 +628,7 @@ def astarsearch(graph, startloc, endloc):
     Uses weights and heuristic.
     Will always find the shortest path (in terms of weight).
     Time Complexity:
-        O((|V|+2|E|)+log|V|) = O(2|E|log|V|)
+        O((|V|+2|E|)log|V|) = O(2|E|log|V|)
         Faster in practice due to the manhattandist used as heuristic
         (search strategy) to get the correct direction of the path
         and early exit condition.
@@ -639,7 +657,8 @@ def astarsearch(graph, startloc, endloc):
 
         #neighbors takes O(|V|) since visits all vertices
         for nexttile in graph.neighbors(currenttile):
-            newpathcost = pathcost[currenttile] + graph.cost(currenttile, nexttile)
+            newpathcost = pathcost[currenttile] \
+            + graph.cost(currenttile, nexttile)
             #edge additions take O(2|E|) for undirected graph (handshake lemma)
             if nexttile not in visited or newpathcost < pathcost[nexttile]:
                 #set lowest priority for tile with least cost so far
@@ -671,8 +690,8 @@ def getpath(pathdict, startloc, endloc):
     #path goes backwards since pathdict has edges from startloc to endloc
     #since pathdict[nexttile] gives location of previoustile
     currenttile = endloc
-    # path = [currenttile] #includes the endlocation/full path
-    path = [] #will not include end tile
+    path = [currenttile] #includes the endlocation/full path
+    # path = [] #will not include end tile
     #when reach startloc, got all tiles in path
     while currenttile != startloc:
         currenttile = pathdict[currenttile]
@@ -729,7 +748,8 @@ wtgrid.getwalls(dungeon)
 if RUN_PATH_TESTS:
 
     print('depthfirstsearch')
-    pathdict = depthfirstsearch(wtgrid, (1,1), (12,12)) # print(pathdict) too long
+    pathdict = depthfirstsearch(wtgrid, (1,1), (12,12))
+    # print(pathdict) way too long
     print('depthfirstsearch path')
     print(getpath(pathdict, (1,1), (12,12)))
 
@@ -757,7 +777,7 @@ if RUN_PATH_TESTS:
     print('astarsearch path')
     print(getpath(pathdict, (1,1), (12,12)))
 
-print('AI type: ', enemy1.ai)
+print('AI type: ', aidict[enemy1.ai])
 
 # while True:
 #     dungeon.draw((dungeon.width,), (dungeon.height,))

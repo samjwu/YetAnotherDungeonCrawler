@@ -1,4 +1,4 @@
-# YetAnotherDungeonCrawler (YADC)
+YetAnotherDungeonCrawler (YADC)
 
 By: Sam Wu and Ishaat Chowdhury
 
@@ -40,7 +40,7 @@ gameplay.py - contains classes and functions for player and enemies
 gameplay_constants.py - contains constants for player and enemies
 
 Notes:
-Speed up the game by increasing the FPS and enemyframes constants
+Speed up the game by increasing the FPS and enemyframes constants 
 defined in the gameplay_constants.py file.
 The level.py and gameplay.py files have global variables named DEBUG
 that can be disabled or enabled to toggle print statements

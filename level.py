@@ -333,8 +333,8 @@ class Hallway(pygame.sprite.Sprite):
         """ Get border of hallway as a dictionary
 
             Returns:
-                self.border (dict): dictionary with (x, y) position of each tile
-                    in border as keys and their corresponding Tile class
+                self.border (dict): dictionary with (x, y) position of each
+                    tile in border as keys and their corresponding Tile class
                     instance as values
         """
         return self.border
@@ -367,7 +367,8 @@ class Hallway(pygame.sprite.Sprite):
             Arguments:
                 start (2-tuple: int): start point of hallway
                 end (2-tuple: int): end point of hallway
-                add_border (bool): sets wheter border tiles should automatically
+                add_border (bool): sets wheter border tiles should
+                    automatically
                     be created upon generation of horizontal path section.
                     Default: False
         """
@@ -396,7 +397,8 @@ class Hallway(pygame.sprite.Sprite):
             Arguments:
                 start (2-tuple: int): start point of hallway
                 end (2-tuple: int): end point of hallway
-                add_border (bool): sets wheter border tiles should automatically
+                add_border (bool): sets wheter border tiles should
+                    automatically
                     be created upon generation of vertical path section.
                     Default: False
         """
@@ -503,8 +505,8 @@ class Dungeon(pygame.sprite.Sprite):
         """ Generates random room on map and adds to room list
 
             Arguments:
-                region_x (int): x position of topleft corner of enclosing region
-                region_y (int): y position of topleft corner of enclosing region
+                region_x (int): x position of topleft corner of region
+                region_y (int): y position of topleft corner of region
                 region_width (int): width of enclosing region
                 region_height (int): height of enclosing region
 
@@ -831,7 +833,8 @@ class Dungeon(pygame.sprite.Sprite):
                 room_iterable_2 (iterable: Room): second iterable of rooms
 
             Returns:
-                room_pair (tuple: Room): pair of rooms that are closest together
+                room_pair (tuple: Room): pair of rooms that are closest
+                                         together
         """
         room_pair = None
         min_dist = float("inf")
@@ -861,13 +864,13 @@ class Dungeon(pygame.sprite.Sprite):
             right) each function call.
             Once the sub regions cannot be split anymore or the region falls
             within a desired size, a room will be generated within the region.
-            Since the room within the region is surrounded by void space due to
+            Since room within the region is surrounded by void space due to
             the way rooms defined, no two rooms in the dungeon will collide.
             Regions are built in a top-down fashion. However, connection of
             rooms are done in a bottom-up fashion. Each region in the dungeon
             must be connected is connected to its closest sister. Once all the
             regions have been connected, there is guaranteed to be a path to
-            every room within dungeon. Note, this way of connecting the rooms is
+            every room within dungeon. This way of connecting the rooms is
             not strictly a required feature of BSP, but instead our addition.
             Note: that this does not absolutely guarantee that the connection
                 will be proper (ie, with no tearing of room). That can happen
@@ -875,8 +878,8 @@ class Dungeon(pygame.sprite.Sprite):
                 ensure whether the connection can be made.
 
             Arguments:
-                region_x (int): x position of topleft corner of enclosing region
-                region_y (int): y position of topleft corner of enclosing region
+                region_x (int): x position of topleft corner of region
+                region_y (int): y position of topleft corner of region
                 region_width (int): width of enclosing region
                 region_height (int): height of enclosing region
 
@@ -888,7 +891,7 @@ class Dungeon(pygame.sprite.Sprite):
         if DEBUG_SPLIT:
             print("Generating")
             print("region: ( {}, {}, {}, {} )".format(region_x, region_y,
-                                                    region_width, region_height))
+                                                region_width, region_height))
 
         if BSP_CHECK_SPLIT_FIRST:
             choices = []

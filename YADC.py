@@ -84,6 +84,8 @@ while running:
         enemy.attack(player)
 
     if player.died():
+        player.draw()
+        pygame.display.update()
         print("GAME OVER")
         running = False
 
