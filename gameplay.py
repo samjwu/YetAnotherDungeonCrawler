@@ -13,10 +13,13 @@ import level
 from level_constants import *
 from gameplay_constants import *
 
-#constants for print statements
+#constants for print statements (for testing)
 DEBUG_PLAYER = False
 DEBUG_ENEMY = False
 DEBUG_PATH = False
+RUN_PATH_TESTS = False
+
+
 
 class Player():
     '''Player class'''
@@ -129,6 +132,7 @@ class Player():
             return True
         return False
 
+
 class Enemy():
     '''Class for enemy objects'''
     def __init__(self, x, y, spritenum):
@@ -181,14 +185,22 @@ class Enemy():
         playerloc = (playerx, playery)
         enemyloc = (enemyx, enemyy)
 
-        if self.ai == 0:
+        if self.ai == BREADTH:
             if DEBUG_PATH:
                 print('breadthfirstsearch')
             pathdict = breadthfirstsearch(graph, enemyloc, playerloc)
-        elif self.ai == 1:
+        elif self.ai == DIJKSTRA:
             if DEBUG_PATH:
                 print('dijkstra')
             pathdict = dijkstra(graph, enemyloc, playerloc)
+        elif self.ai == BEST:
+            if DEBUG_PATH:
+                print('bestfirstsearch')
+            pathdict = bestfirstsearch(graph, enemyloc, playerloc)
+        elif self.ai == ASTAR:
+            if DEBUG_PATH:
+                print('astarsearch')
+            pathdict = astarsearch(graph, enemyloc, playerloc)
         if DEBUG_PATH:
             print('path')
         path = getpath(pathdict, enemyloc, playerloc)
@@ -226,6 +238,8 @@ class Enemy():
             return True
         return False
 
+
+
 def checkhp(enemy_list):
     '''
     Check hp of all enemies and kill an enemy
@@ -236,12 +250,13 @@ def checkhp(enemy_list):
             enemy_list.remove(enemy)
 
 
-class Queue():
+
+class Deque():
     '''
     Use a deque from collections library as a queue
-    (append elements to back and pop from front).
-    The breadthfirstsearch function uses this data structure
-    to store its vertices to search.
+    (append elements to back and pop from front) for the breadthfirstsearch.
+    Use the deque as a stack
+    (append elements to front and pop from front) for the depthfirstsearch.
     '''
     def __init__(self):
         self.elements = collections.deque()
@@ -249,10 +264,22 @@ class Queue():
     def isempty(self):
         return len(self.elements) == 0
 
-    def push(self, x):
+    def pushback(self, x):
+        '''
+        Put element at back of deque.
+        '''
         self.elements.append(x)
 
+    def pushfront(self, x):
+        '''
+        Put element at front of deque
+        '''
+        self.elements.appendleft(x)
+
     def pop(self):
+        '''
+        Get element from back of deque
+        '''
         return self.elements.popleft()
 
 
@@ -279,7 +306,8 @@ class PriorityQueue:
 
 class TileGraph():
     '''
-    Undirected graph of tiles.
+    Undirected graph with tiles as nodes.
+    Edges are connections between non-wall tiles.
     '''
     def __init__(self):
         self.edges = {}
@@ -291,6 +319,8 @@ class TileGraph():
         '''
         Method to fill TileGraph instance with undirected edges of a Dungeon
         instance.
+        Time Complexity:
+            O(2|E|)
         '''
         for col in range(MAP_WIDTH-1):
             for row in range(MAP_HEIGHT-1):
@@ -301,7 +331,6 @@ class TileGraph():
                 righttile = dungeon.tile_map[(col + 1, row)]
                 downtile = dungeon.tile_map[(col, row + 1)]
                 if currtile.tile_id != WALL:
-                    #??? row, col ??? todo
                     if righttile.tile_id != WALL:
                         self.edges[(col,row)].append( (col+1,row) )
                         self.edges[(col+1,row)].append( (col,row) )
@@ -334,6 +363,8 @@ class TileGrid():
         '''
         Method to get the locations of the walls and put them into a list
         used for wall collision detection.
+        Time Complexity:
+            O(|V|)
         Args:
             dungeon (class): an instance of the Dungeon class
                             used to get all the walls
@@ -367,7 +398,7 @@ class WeightedTileGrid(TileGrid):
     A weighted grid-based graph class inherited from the TileGrid class.
     This derived class has all the methods of the base class (TileGrid) and
     needs to have the same arguments as TileGrid.
-    Used for searches that have priorities or heuristics such as dijkstra,
+    Used for searches that have priorities such as dijkstra,
     but can also be used in breadthfirstsearch.
     Note super is useful for dependency injection.
     (eg: for changing base class and less verbosity/explicit references)
@@ -388,9 +419,38 @@ class WeightedTileGrid(TileGrid):
         return self.weights.pop(end, 1)
 
 
+
+def depthfirstsearch(graph, startloc, endloc):
+    #note push/pop for deques take O(1) time
+    tosearch = Deque() #used as stack
+    tosearch.pushfront(startloc)
+    visited = {}
+    visited[startloc] = None
+
+    while not tosearch.isempty():
+        currenttile = tosearch.pop()
+
+        #early exit
+        if currenttile == endloc:
+            break
+
+        #neighbors takes O(|V|) since visits all vertices
+        for nexttile in graph.neighbors(currenttile):
+            #edge additions take O(2|E|) since undirected graph
+            #handshake lemma
+            if nexttile not in visited:
+                tosearch.pushfront(nexttile)
+                visited[nexttile] = currenttile
+    return visited
+
+
 def breadthfirstsearch(graph, startloc, endloc):
     '''
     Breadth first search on the given graph.
+    Starts at the startloc tile and continues visiting closest neighbors
+    until it reaches endloc tile.
+    Does not use weights or heuristic.
+    Will always find the shortest path (in number of steps).
     Time Complexity:
         O(|V|+2|E|)
     Args:
@@ -398,11 +458,12 @@ def breadthfirstsearch(graph, startloc, endloc):
         startloc (tuple): coordinates of start tile
         endloc (tuple): coordinates of end tile
     Returns:
-        visited (dict): dictionary with keys as destination and values as previous tile
+        visited (dict): dictionary with keys as destination
+                        and values as previous tile
     '''
     #note push/pop for deques take O(1) time
-    tosearch = Queue()
-    tosearch.push(startloc)
+    tosearch = Deque() #used as queue
+    tosearch.pushback(startloc)
     #dict with path from start to end
     visited = {}
     visited[startloc] = None
@@ -420,7 +481,7 @@ def breadthfirstsearch(graph, startloc, endloc):
             #edge additions take O(2|E|) since undirected graph
             #handshake lemma
             if nexttile not in visited:
-                tosearch.push(nexttile)
+                tosearch.pushback(nexttile)
                 visited[nexttile] = currenttile
     return visited
 
@@ -428,6 +489,10 @@ def breadthfirstsearch(graph, startloc, endloc):
 def dijkstra(graph, startloc, endloc):
     '''
     Search on the given graph with Dijkstra's Algorithm.
+    Starts at the startloc tile and continues visiting the
+    lowest weighted neighbors until it reaches endloc tile.
+    Use weights, but no heuristic.
+    Will always find the shortest path (in terms of weight).
     Time Complexity:
         O((|V|+2|E|)+log|V|) = O(2|E|log|V|)
     Args:
@@ -435,7 +500,8 @@ def dijkstra(graph, startloc, endloc):
         startloc (tuple): coordinates of start tile
         endloc (tuple): coordinates of end tile
     Returns:
-        visited (dict): dictionary with keys as destination and values as previous tile
+        visited (dict): dictionary with keys as destination
+                        and values as previous tile
     '''
     #note push/pop take O(logn) time for binary heap
     #since binary heaps have logn height
@@ -468,6 +534,116 @@ def dijkstra(graph, startloc, endloc):
                 pathcost[nexttile] = newpathcost
     return visited
     #pathcost is optional parameter to return
+    # return visited, pathcost
+
+
+def manhattandist(startpoint, endpoint):
+    '''
+    Find straight-line (Manhattan) distance between two points.
+    Args:
+        startpoint (tuple): coordinates of first point
+        endpoint (tuple): coordinates of second point
+    Return:
+        dist (int): the straight-line distance between startpoint and endpoint
+    '''
+    dx = abs(endpoint[0] - startpoint[0])
+    dy = abs(endpoint[1] - startpoint[1])
+    dist = dx + dy
+    return dist
+
+
+def bestfirstsearch(graph, startloc, endloc):
+    '''
+    Search on the given graph with Best-First search algorithm.
+    Starts at the startloc tile and continues visiting the
+    neighbors that are closest to the endloc tile
+    until it reaches endloc tile.
+    Does not use weights but uses heuristic.
+    greedisgood
+    Time Complexity:
+        O((|V|+2|E|)+log|V|) = O(2|E|log|V|)
+    Args:
+        graph (WeightedTileGrid): instance of the undirected graph of tiles
+        startloc (tuple): coordinates of start tile
+        endloc (tuple): coordinates of end tile
+    Returns:
+        visited (dict): dictionary with keys as destination
+                        and values as previous tile
+    '''
+    #note push/pop take O(logn) time for binary heaps (logn height)
+    tosearch = PriorityQueue()
+    tosearch.push(startloc, 0)
+    visited = {}
+    visited[startloc] = None
+
+    while not tosearch.isempty():
+        currenttile = tosearch.pop()
+
+        #early exit (needed for Best-First Search and A*)
+        if currenttile == endloc:
+            break
+
+        #neighbors takes O(|V|) since visits all vertices
+        for nexttile in graph.neighbors(currenttile):
+            #edge additions take O(2|E|) for undirected graph (handshake lemma)
+            if nexttile not in visited:
+                #set lowest priority for tile with least distance from endloc
+                priority = manhattandist(endloc, nexttile)
+                tosearch.push(nexttile, priority)
+                visited[nexttile] = currenttile
+
+    return visited
+
+
+def astarsearch(graph, startloc, endloc):
+    '''
+    Search on the given graph with A* search algorithm.
+    Starts at the startloc tile and continues visiting the
+    lowest weighted neighbors that are also close to the endloc tile
+    until it reaches endloc tile.
+    Uses weights and heuristic.
+    Will always find the shortest path (in terms of weight).
+    Time Complexity:
+        O((|V|+2|E|)+log|V|) = O(2|E|log|V|)
+        Faster in practice due to the manhattandist used as heuristic
+        (search strategy) to get the correct direction of the path
+        and early exit condition.
+    Args:
+        graph (WeightedTileGrid): instance of the undirected graph of tiles
+        startloc (tuple): coordinates of start tile
+        endloc (tuple): coordinates of end tile
+    Returns:
+        visited (dict): dictionary with keys as destination
+                        and values as previous tile
+    '''
+    #note push/pop take O(logn) time for binary heaps (logn height)
+    tosearch = PriorityQueue()
+    tosearch.push(startloc, 0)
+    visited = {}
+    visited[startloc] = None
+    pathcost = {}
+    pathcost[startloc] = 0
+
+    while not tosearch.isempty():
+        currenttile = tosearch.pop()
+
+        #early exit (needed for Best-First Search and A*)
+        if currenttile == endloc:
+            break
+
+        #neighbors takes O(|V|) since visits all vertices
+        for nexttile in graph.neighbors(currenttile):
+            newpathcost = pathcost[currenttile] + graph.cost(currenttile, nexttile)
+            #edge additions take O(2|E|) for undirected graph (handshake lemma)
+            if nexttile not in visited or newpathcost < pathcost[nexttile]:
+                #set lowest priority for tile with least cost so far
+                #and least distance from the endloc
+                priority = newpathcost + manhattandist(endloc, nexttile)
+                tosearch.push(nexttile, priority)
+                visited[nexttile] = currenttile
+                pathcost[nexttile] = newpathcost
+    return visited
+    #return pathcost is optional
     # return visited, pathcost
 
 
@@ -510,26 +686,26 @@ dungeon = level.Dungeon()
 
 room1 = level.Room(0,0,6,6)
 dungeon.rooms.append(room1)
-dungeon.update_tilemap(room1)
+dungeon.tile_map.update(room1.get_tile_dict())
 room1.draw()
 
 room2 = level.Room(10,10,6,6)
 dungeon.rooms.append(room2)
-dungeon.update_tilemap(room2)
+dungeon.tile_map.update(room2.get_tile_dict())
 room2.draw()
 
-start = (5, 3)
-end = (13, 10)
-hallway = level.Hallway(start, end)
-dungeon.hallways.append(hallway)
-hallway.create_lshaped_path(start, end)
-dungeon.update_tilemap(hallway.get_path() + hallway.get_border())
-hallway.draw()
+# start = (5, 3)
+# end = (13, 10)
+# hallway = level.Hallway(start, end)
+# dungeon.hallways.append(hallway)
+dungeon.connect_rooms(room1, room2)
+# dungeon.update_tilemap(hallway.get_path() + hallway.get_border())
+# hallway.draw()
 
-dungeon.add_hallway()
+# dungeon.add_hallway()
 
-player = Player(player_x, player_y, player_sprite, player_speed)
-enemy1 = Enemy(enemy1_x, enemy1_y, enemy1_sprite, enemy1_speed)
+player = Player(1, 1, 0)
+enemy1 = Enemy(360, 360, 1)
 allenemies = [enemy1]
 
 # tilegraph = TileGraph()
@@ -541,32 +717,55 @@ allenemies = [enemy1]
 # print(tilegrid.walls)
 
 wtgrid = WeightedTileGrid(MAP_WIDTH,MAP_HEIGHT)
-wtgrid.getwalls()
+wtgrid.getwalls(dungeon)
 # print(wtgrid.walls)
-# print('bfs')
-# pathdict = bfs(wtgrid, (1,1), (12,12))
-# print(pathdict)
-# print('bfs path')
-# print(getpath(pathdict, (1,1), (12,12)))
-# print('dijkstra')
-# pathdict, pathcost = dijkstra(wtgrid, (1,1), (12,12))
-# print(pathdict)
-# print('dijkstra path')
-# print(getpath(pathdict, (1,1), (12,12)))
 
+if RUN_PATH_TESTS:
+
+    print('depthfirstsearch')
+    pathdict = depthfirstsearch(wtgrid, (1,1), (12,12)) # print(pathdict) too long
+    print('depthfirstsearch path')
+    print(getpath(pathdict, (1,1), (12,12)))
+
+    print('breadthfirstsearch')
+    pathdict = breadthfirstsearch(wtgrid, (1,1), (12,12))
+    print(pathdict)
+    print('breadthfirstsearch path')
+    print(getpath(pathdict, (1,1), (12,12)))
+
+    print('dijkstra')
+    pathdict = dijkstra(wtgrid, (1,1), (12,12))
+    print(pathdict)
+    print('dijkstra path')
+    print(getpath(pathdict, (1,1), (12,12)))
+
+    print('bestfirstsearch')
+    pathdict = bestfirstsearch(wtgrid, (1,1), (12,12))
+    print(pathdict)
+    print('bestfirstsearch path')
+    print(getpath(pathdict, (1,1), (12,12)))
+
+    print('astarsearch')
+    pathdict = astarsearch(wtgrid, (1,1), (12,12))
+    print(pathdict)
+    print('astarsearch path')
+    print(getpath(pathdict, (1,1), (12,12)))
+
+print('AI type: ', enemy1.ai)
 
 while True:
     dungeon.draw((dungeon.width,), (dungeon.height,))
 
-    level.DISPLAY_SURFACE.blit(player_sprite, (player.rect.x, player.rect.y))
-    level.DISPLAY_SURFACE.blit(enemy1_sprite, (enemy1.rect.x, enemy1.rect.y))
+    player.draw()
+    for enemy in allenemies:
+        enemy.draw()
 
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
 
-    enemy1.chase_player(player)
+    enemy1.chase_player(player, wtgrid)
     player.collision(allenemies)
 
     # print(dungeon.tile_map)

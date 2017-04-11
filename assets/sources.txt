@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
-images
+Images
 --------------------------------------------------------------------------------
 
 Dungeon Floor:
@@ -14,7 +14,6 @@ Door:
 http://spiralgraphics.biz/packs/door_medieval/index.htm?0#anchor
 X-Mark:
 http://www.clipartkid.com/images/573/red-x-mark-4-icon-free-red-x-mark-icons-5br1Kr-clipart.gif
-
 Ladder:
 https://vignette2.wikia.nocookie.net/minecraft/images/1/10/Ladders.png/revision/latest?cb=20111016173249
 

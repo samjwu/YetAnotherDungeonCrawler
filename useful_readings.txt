@@ -12,11 +12,54 @@ https://gamedevelopment.tutsplus.com/tutorials/generate-random-cave-levels-using
 
 Binary Space Partitioning:
 https://gamedevelopment.tutsplus.com/tutorials/how-to-use-bsp-trees-to-generate-game-maps--gamedev-12268
-
 https://gamedevelopment.tutsplus.com/tutorials/create-a-procedurally-generated-dungeon-cave-system--gamedev-10099
 
-A* Search
+Breadth First Search:
+https://www.tutorialspoint.com/data_structures_algorithms/breadth_first_traversal.htm
+https://courses.cs.washington.edu/courses/cse326/03su/homework/hw3/bfs.html
+http://www.stoimen.com/blog/2012/09/10/computer-algorithms-graph-breadth-first-search/
+
+Depth First Search:
+https://www.tutorialspoint.com/data_structures_algorithms/depth_first_traversal.htm
+http://stackoverflow.com/questions/5278580/non-recursive-depth-first-search-algorithm
+https://courses.cs.washington.edu/courses/cse326/03su/homework/hw3/dfs.html
+http://www.stoimen.com/blog/2012/09/17/computer-algorithms-graph-depth-first-search/
+
+Dijkstra's Algorithm:
+https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+https://rosettacode.org/wiki/Dijkstra%27s_algorithm#Python
+http://www.geeksforgeeks.org/greedy-algorithms-set-6-dijkstras-shortest-path-algorithm/
+http://code.activestate.com/recipes/577343-dijkstras-algorithm-for-shortest-paths/
+
+Best First Search:
+https://en.wikipedia.org/wiki/Best-first_search
+https://en.wikipedia.org/wiki/Heuristic_(computer_science)
+https://courses.cs.washington.edu/courses/cse326/03su/homework/hw3/bestfirstsearch.html
+http://www.stoimen.com/blog/2012/09/24/computer-algorithms-graph-best-first-search/
+
+A* Search:
+https://en.wikipedia.org/wiki/A*_search_algorithm
+https://en.wikipedia.org/wiki/Heuristic_(computer_science)
+http://web.mit.edu/eranki/www/tutorials/search/
+http://theory.stanford.edu/~amitp/GameProgramming/AStarComparison.html
 http://www.redblobgames.com/pathfinding/a-star/introduction.html
+https://aigamedev.com/open/tutorials/clearance-based-pathfinding/
+http://www.aaai.org/Papers/AAAI/2006/AAAI06-148.pdf
+https://webdocs.cs.ualberta.ca/~nathanst/aaai_tut3.pdf
+
+Jump Point Search:
+https://en.wikipedia.org/wiki/Jump_point_search
+https://harablog.wordpress.com/2011/09/07/jump-point-search/
+
+Methods:
+http://www.bogotobogo.com/python/python_differences_between_static_method_and_class_method_instance_method.php
+http://softwareengineering.stackexchange.com/questions/306092/what-are-class-methods-and-instance-methods-in-python
+
+Pygame:
+https://inventwithpython.com/makinggames.pdf
+https://inventwithpython.com/pygame/chapters/
+http://usingpython.com/pygame-intro/
+http://www.pygame.org/docs/
 
 Pygame Sound:
 http://code.activestate.com/recipes/521884-play-sound-files-with-pygame-in-a-cross-platform-m/

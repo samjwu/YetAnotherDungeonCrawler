@@ -50,13 +50,14 @@ def create_level():
 
 create_level()
 running = True
+
 while running:
     dungeon.draw((dungeon.width,), (dungeon.height,))
 
+    #win game/next level
     if dungeon.check_ladder_reached(player):
         print("Ladder reached")
         create_level()
-
 
     player.draw()
     gameplay.checkhp(allenemies)

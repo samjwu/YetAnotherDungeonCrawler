@@ -460,13 +460,11 @@ class Dungeon(pygame.sprite.Sprite):
     MAX_WIDTH = Room.MAX_WIDTH + 2
     MAX_HEIGHT = Room.MAX_HEIGHT + 2
     def __init__(self, height=MAP_HEIGHT, width=MAP_WIDTH):
-        """ Creates new dungeon object
-
-            Arguments:
-                height (int): height of dungeon, default specified in constants
-                                file
-                width (int): width of dungeon, default specified in constants
-                                file
+        """
+        Creates new dungeon object
+        Arguments:
+            height (int): dungeon height, default specified in level_constants
+            width (int): dungeon width, default specified in level_constants
         """
         # Call baseclass constructor
         super(Dungeon, self).__init__()
@@ -489,8 +487,8 @@ class Dungeon(pygame.sprite.Sprite):
             self.create_all_hallway_borders()
 
     def draw(self, x_limits, y_limits):
-        """ Displays map on screen
-
+        """
+        Displays map on screen
             Arguments:
                 x_limits (2-tuple: int): range of desired x-values within the
                     dungeon to draw

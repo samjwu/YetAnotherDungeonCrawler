@@ -29,8 +29,12 @@ spritedict = {
     PIKACHU: (sprite1,100,1,10)
 }
 
-# enemy constants
-AI = 2
+# ai constants
+AI = 4 #actually 5 if dfs included
+BREADTH = 0
+DIJKSTRA = 1
+BEST = 2
+ASTAR = 3
 
 #sound effects
 punchsound = pygame.mixer.Sound("assets/soundfx/strongpunch.wav")
