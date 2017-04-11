@@ -14,19 +14,25 @@ fpsClock = pygame.time.Clock()
 enemyclock = pygame.time.Clock()
 
 #load images for sprites
+sasuke = pygame.image.load("assets/images/sasuke0.png").convert_alpha()
+sasukeatk = pygame.image.load("assets/images/sasuke1.png").convert_alpha()
 sprite0 = pygame.image.load("assets/images/calvin.png").convert_alpha()
 sprite1 = pygame.image.load("assets/images/pikachu.png").convert_alpha()
 
 #numerical constants to represent sprites
-numsprites = 2
-CALVIN = 0
+numsprites = 3
+SASUKEATK = -1
+SASUKE = 0
 PIKACHU = 1
+CALVIN = 2
 
 #dictionary to represent sprites
 #values: image,hp,damage,speed
 spritedict = {
-    CALVIN: (sprite0,100,25,30),
-    PIKACHU: (sprite1,100,1,10)
+    SASUKEATK: (sasukeatk,100,25,25),
+    SASUKE: (sasuke,100,25,25),
+    PIKACHU: (sprite1,100,1,5),
+    CALVIN: (sprite0,100,2,3)
 }
 
 # ai constants

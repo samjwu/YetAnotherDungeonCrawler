@@ -14,8 +14,8 @@ from level_constants import *
 from gameplay_constants import *
 
 #constants for print statements (for testing)
-DEBUG_PLAYER = False
-DEBUG_ENEMY = False
+DEBUG_PLAYER = True
+DEBUG_ENEMY = True
 DEBUG_PATH = False
 RUN_PATH_TESTS = False
 
@@ -48,6 +48,7 @@ class Player():
             dx (int): how far to move horiziontally
             dy (int): how far to move vertically
         '''
+        self.sprite = spritedict[0][0]
         if self.rect.x < -1:
             self.rect.x = 1
         elif self.rect.x > (MAP_WIDTH-2)*(TILE_SIZE):
@@ -97,7 +98,7 @@ class Player():
         for enemy in enemy_list:
             # if self.rect.colliderect(enemy.rect):
             if player.rect == enemy.rect:
-                print('GAME OVER')
+                print('TEST GAME OVER')
                 pygame.quit()
                 sys.exit()
 
@@ -112,6 +113,7 @@ class Player():
             and enemy.rect.y < self.rect.y + 2*TILE_SIZE:
                 punchsound.play()
                 enemy.hp -= self.damage
+                self.sprite = spritedict[-1][0]
                 if DEBUG_ENEMY:
                     print('enemy hp: ', enemy.hp)
 
@@ -217,12 +219,16 @@ class Enemy():
                 enemyclock.tick(enemyframes)
 
     def attack(self, player):
+        '''
+        Enemy attacks player if in range.
+        '''
         if player.rect.x > self.rect.x - TILE_SIZE \
             and player.rect.x < self.rect.x + 2*TILE_SIZE \
             and player.rect.y > self.rect.y - TILE_SIZE \
             and player.rect.y < self.rect.y + 2*TILE_SIZE:
                 pikachu_attack.play()
                 player.hp -= self.damage
+                enemyclock.tick(enemyframes)
                 if DEBUG_PLAYER:
                     print('player hp: ', player.hp)
 
@@ -753,32 +759,32 @@ if RUN_PATH_TESTS:
 
 print('AI type: ', enemy1.ai)
 
-while True:
-    dungeon.draw((dungeon.width,), (dungeon.height,))
-
-    player.draw()
-    for enemy in allenemies:
-        enemy.draw()
-
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-
-    enemy1.chase_player(player, wtgrid)
-    player.collision(allenemies)
-
-    # print(dungeon.tile_map)
-
-    keys_pressed = pygame.key.get_pressed()
-    if keys_pressed[K_LEFT]:
-        player.move(-1,0,dungeon.tile_map)
-    if keys_pressed[K_RIGHT]:
-        player.move(1,0,dungeon.tile_map)
-    if keys_pressed[K_UP]:
-        player.move(0,1,dungeon.tile_map)
-    if keys_pressed[K_DOWN]:
-        player.move(0,-1,dungeon.tile_map)
-
-    pygame.display.update()
-fpsClock.tick(FPS)
+# while True:
+#     dungeon.draw((dungeon.width,), (dungeon.height,))
+#
+#     player.draw()
+#     for enemy in allenemies:
+#         enemy.draw()
+#
+#     for event in pygame.event.get():
+#         if event.type == QUIT:
+#             pygame.quit()
+#             sys.exit()
+#
+#     enemy1.chase_player(player, wtgrid)
+#     player.collision(allenemies)
+#
+#     # print(dungeon.tile_map)
+#
+#     keys_pressed = pygame.key.get_pressed()
+#     if keys_pressed[K_LEFT]:
+#         player.move(-1,0,dungeon.tile_map)
+#     if keys_pressed[K_RIGHT]:
+#         player.move(1,0,dungeon.tile_map)
+#     if keys_pressed[K_UP]:
+#         player.move(0,1,dungeon.tile_map)
+#     if keys_pressed[K_DOWN]:
+#         player.move(0,-1,dungeon.tile_map)
+#
+#     pygame.display.update()
+# fpsClock.tick(FPS)
