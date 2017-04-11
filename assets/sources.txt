@@ -21,6 +21,12 @@ Calvin:
 http://now.unfolded.ch/tag/technology/
 Pikachu:
 http://lawlkittyface.deviantart.com/art/Pikachu-pixel-363799964
+Sasuke:
+http://orig01.deviantart.net/bb04/f/2013/008/9/9/sasuke_rapid_sword_attack_by_neo1146-d5qwhiy.png
+Anbu:
+http://spritedatabase.net/files/ds/59/Sprite/Anbu.png
+Itachi:
+http://orig13.deviantart.net/a386/f/2008/125/6/3/anbu_itachi_spritesheet_by_pokemon123man.png
 
 --------------------------------------------------------------------------------
 Sound Effects
@@ -28,9 +34,14 @@ Sound Effects
 
 Strong Punch:
 http://soundbible.com/tags-smash.html
-
 Game Over:
 https://www.reddit.com/r/metalgearsolid/comments/1jt1vg/official_metal_gear_solid_sound_effects/
-
 Pikachu Sounds:
 https://www.youtube.com/watch?v=Io7qoSVONI8
+
+--------------------------------------------------------------------------------
+Music
+--------------------------------------------------------------------------------
+
+Now You're a Hero:
+http://www.newgrounds.com/audio/listen/134684

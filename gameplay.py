@@ -14,8 +14,8 @@ from level_constants import *
 from gameplay_constants import *
 
 #constants for print statements (for testing)
-DEBUG_PLAYER = True
-DEBUG_ENEMY = True
+DEBUG_PLAYER = False
+DEBUG_ENEMY = False
 DEBUG_PATH = False
 RUN_PATH_TESTS = False
 

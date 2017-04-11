@@ -48,3 +48,6 @@ gameover = pygame.mixer.Sound("assets/soundfx/gameover.wav")
 gameover_snake = pygame.mixer.Sound("assets/soundfx/gameover_snake.wav")
 pikachu_attack = pygame.mixer.Sound("assets/soundfx/pikachu_attack.wav")
 pikachu_die = pygame.mixer.Sound("assets/soundfx/pikachu_die.wav")
+
+#music/songs
+song1 = "assets/music/NowYou'reaHero.mp3"

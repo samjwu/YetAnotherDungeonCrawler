@@ -10,6 +10,11 @@ import gameplay
 from gameplay_constants import *
 import display
 
+
+#set False to mute music
+MUSIC = True
+
+#global variables
 dungeon = None
 weightedgrid = None
 player = None
@@ -36,7 +41,7 @@ def create_level():
         enemy_spawn_point = tuple([c*TILE_SIZE for c in enemy_spawn_point])
 
         enemy = gameplay.Enemy(enemy_spawn_point[0], enemy_spawn_point[1], \
-                random.randint(1, 1))
+                random.randint(1, 2))
         allenemies.append(enemy)
 
     dungeon.place_ladder(player_room)
@@ -47,6 +52,9 @@ def create_level():
     da = display.DisplayArea()
     da.fill_area()
 
+if MUSIC:
+    pygame.mixer.music.load(song1)
+    pygame.mixer.music.play(-1)
 
 create_level()
 running = True
